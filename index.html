@@ -82,16 +82,21 @@
                     <option value="2">🟡 Medium</option>
                     <option value="3">🔵 Low</option>
                 </select>
-                <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1 rounded-lg">+</button>
+                <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1 rounded-lg">✚</button>
             </div>
         </div>
 
         <div id="active-tasks" class="space-y-1 mb-8"></div>
 
         <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
-            <div class="completed-section-header flex items-center gap-2 text-gray-400 text-sm font-medium mb-4" onclick="toggleCompletedList()">
-                <span id="chevron">∨</span> Completed <span id="completed-count" class="ml-1">0</span>
-            </div>
+            <div class="completed-section-header flex items-center gap-2 text-gray-500 text-sm font-semibold mb-4" onclick="toggleCompletedList()">
+    <span id="chevron-svg" class="transition-transform duration-200">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    </span> 
+    Completed <span id="completed-count" class="ml-1 font-normal opacity-60">0</span>
+</div>
             <div id="completed-tasks" class="space-y-1"></div>
         </div>
     </main>
@@ -146,11 +151,20 @@
             render();
         }
 
-        function toggleCompletedList() {
-            showCompleted = !showCompleted;
-            document.getElementById('completed-tasks').classList.toggle('hidden');
-            document.getElementById('chevron').innerText = showCompleted ? '∨' : '>';
-        }
+function toggleCompletedList() {
+    showCompleted = !showCompleted;
+    
+    // Ẩn/hiện danh sách
+    document.getElementById('completed-tasks').classList.toggle('hidden');
+    
+    // Xoay icon SVG
+    const chevron = document.getElementById('chevron-svg');
+    if (showCompleted) {
+        chevron.style.transform = 'rotate(90deg)'; // Trỏ xuống
+    } else {
+        chevron.style.transform = 'rotate(0deg)';  // Trỏ ngang như ">"
+    }
+}
 
         function render() {
             const activeEl = document.getElementById('active-tasks');
