@@ -82,10 +82,14 @@
             </div>
             <div id="active-tasks" class="space-y-1"></div>
             <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
-                <div class="flex items-center gap-2 text-gray-400 text-[11px] font-medium mb-3 cursor-pointer" onclick="toggleCompletedList()">
-                    <span id="chevron-svg" class="transition-transform duration-200 rotate-90"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg></span> 
-                    Completed (<span id="completed-count">0</span>)
-                </div>
+<div class="flex items-center gap-2 text-gray-400 text-[14px] font-bold mb-3 cursor-pointer" onclick="toggleCompletedList()">
+    <span id="chevron-svg" class="transition-transform duration-200 rotate-90">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    </span> 
+    Completed <span id="completed-count" class="ml-1">0</span>
+</div>
                 <div id="completed-tasks" class="space-y-1 opacity-50"></div>
             </div>
         </div>
@@ -202,7 +206,7 @@
                 <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
                     <div class="flex items-center gap-3">
                         <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
-                        <span class="text-[13px] ${t.completed ? 'text-gray-300 line-through' : 'text-gray-700'}">${t.text}</span>
+                        <span class="text-[13px] ${t.completed ? 'text-gray-300' : 'text-gray-700'}">${t.text}</span>
                     </div>
                     <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
                 </div>`;
