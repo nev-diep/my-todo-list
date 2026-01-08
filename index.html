@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Focus List (Cloud Sync)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .completed { text-decoration: line-through; opacity: 0.6; }
+        .loading { pointer-events: none; opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
+        <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">🎯 My Focus List</h1>
+
+        <div class="flex mb-6 bg-gray-100 rounded-xl p-1">
+            <button onclick="switchTab('today')" id="tab-today" class="flex-1 py-2 rounded-lg transition bg-white shadow-sm font-semibold">Hôm nay</button>
+            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="flex-1 py-2 rounded-lg transition text-gray-500">Ngày mai</button>
+        </div>
+
+        <div class="mb-6 bg-blue-50 p-4 rounded-xl">
+            <div class="flex justify-between text-sm mb-2 font-medium text-blue-700">
+                <span>Tiến độ hoàn thành:</span>
+                <span id="stats-percent">0%</span>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-2.5">
+                <div id="stats-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="form-container" class="space-y-3 mb-8">
+            <input type="text" id="task-input" placeholder="Bạn cần làm gì?" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 transition">
+            <div class="flex gap-2">
+                <select id="category-input" class="flex-1 border-2 border-gray-100 rounded-xl px-2 py-2 text-sm bg-white">
+                    <option value="Work">💼 Work</option>
+                    <option value="Học tập">📚 Học tập</option>
+                    <option value="Việc nhà">🏠 Việc nhà</option>
+                    <option value="Thể dục">🏃 Thể dục</option>
+                    <option value="Other">✨ Other</option>
+                </select>
+                <button onclick="addTask()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition active:scale-95">THÊM</button>
+            </div>
+        </div>
+
+        <ul id="task-list" class="space-y-3">
+            <p class="text-center text-gray-400 py-10">Đang tải dữ liệu...</p>
+        </ul>
+    </div>
+
+    <script>
+        // === CẤU HÌNH SUPABASE ===
+        const SUPABASE_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentTab = 'today';
+        let allTasks = [];
+
+        // Lấy dữ liệu từ Cloud
+        async function fetchTasks() {
+            const { data, error } = await supabase
+                .from('tasks')
+                .select('*')
+                .order('created_at', { ascending: true });
+            
+            if (error) {
+                console.error('Lỗi:', error);
+                return;
+            }
+            allTasks = data;
+            render();
+        }
+
+        // Thêm task mới
+        async function addTask() {
+            const input = document.getElementById('task-input');
+            const category = document.getElementById('category-input').value;
+            if (!input.value) return;
+
+            const btn = event.target;
+            btn.classList.add('loading');
+
+            const { error } = await supabase.from('tasks').insert([
+                { text: input.value, category: category, day: currentTab, completed: false }
+            ]);
+
+            if (!error) {
+                input.value = '';
+                await fetchTasks();
+            }
+            btn.classList.remove('loading');
+        }
+
+        // Cập nhật trạng thái hoàn thành
+        async function toggleTask(id, currentStatus) {
+            const { error } = await supabase
+                .from('tasks')
+                .update({ completed: !currentStatus })
+                .eq('id', id);
+            
+            if (!error) await fetchTasks();
+        }
+
+        // Xóa task
+        async function deleteTask(id) {
+            if(!confirm('Xóa việc này?')) return;
+            const { error } = await supabase.from('tasks').delete().eq('id', id);
+            if (!error) await fetchTasks();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-today').className = tab === 'today' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
+            document.getElementById('tab-tomorrow').className = tab === 'tomorrow' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
+            render();
+        }
+
+        function render() {
+            const listEl = document.getElementById('task-list');
+            const filteredTasks = allTasks.filter(t => t.day === currentTab);
+            
+            if (filteredTasks.length === 0) {
+                listEl.innerHTML = `<p class="text-center text-gray-400 py-10">Hết việc rồi, nghỉ ngơi thôi! ☕</p>`;
+            } else {
+                listEl.innerHTML = filteredTasks.map(t => `
+                    <li class="flex items-center justify-between p-4 border-2 border-gray-50 rounded-2xl hover:border-blue-100 transition bg-gray-50/50">
+                        <div class="flex items-center gap-4">
+                            <input type="checkbox" ${t.completed ? 'checked' : ''} 
+                                onchange="toggleTask(${t.id}, ${t.completed})" 
+                                class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <div>
+                                <p class="${t.completed ? 'completed' : ''} font-semibold text-gray-700">${t.text}</p>
+                                <span class="text-[10px] bg-white border border-blue-200 text-blue-500 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">${t.category}</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 transition px-2">✕</button>
+                    </li>
+                `).join('');
+            }
+
+            // Cập nhật thống kê
+            const doneCount = filteredTasks.filter(t => t.completed).length;
+            const total = filteredTasks.length;
+            const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+            document.getElementById('stats-percent').innerText = percent + '%';
+            document.getElementById('stats-bar').style.width = percent + '%';
+        }
+
+        // Chạy lần đầu
+        fetchTasks();
+    </script>
+</body>
+</html>
