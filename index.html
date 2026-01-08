@@ -90,7 +90,7 @@
 
         <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
             <div class="completed-section-header flex items-center gap-2 text-gray-400 text-sm font-medium mb-4" onclick="toggleCompletedList()">
-                <span id="chevron">⌄</span> Completed <span id="completed-count" class="ml-1">0</span>
+                <span id="chevron">∨</span> Completed <span id="completed-count" class="ml-1">0</span>
             </div>
             <div id="completed-tasks" class="space-y-1"></div>
         </div>
@@ -149,7 +149,7 @@
         function toggleCompletedList() {
             showCompleted = !showCompleted;
             document.getElementById('completed-tasks').classList.toggle('hidden');
-            document.getElementById('chevron').innerText = showCompleted ? '⌄' : '›';
+            document.getElementById('chevron').innerText = showCompleted ? '∨' : '>';
         }
 
         function render() {
