@@ -3,67 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TickTick Pro - Focus List</title>
+    <title>TickTick Clone Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .sidebar-item.active { background-color: #f0f0f2; color: #5c67f2; font-weight: 600; }
-        .priority-1 { border-left: 3px solid #ff4d4f !important; } /* Đỏ - Cao */
-        .priority-2 { border-left: 3px solid #faad14 !important; } /* Vàng - TB */
-        .priority-3 { border-left: 3px solid #52c41a !important; } /* Xanh lá - Thấp */
-        .completed-text { text-decoration: line-through; color: #aaa; }
-        input[type="checkbox"] { appearance: none; width: 18px; height: 18px; border: 1.5px solid #d1d1d1; border-radius: 50%; cursor: pointer; position: relative; }
-        input[type="checkbox"]:checked { background-color: #5c67f2; border-color: #5c67f2; }
-        input[type="checkbox"]:checked::after { content: '✓'; color: white; font-size: 11px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        body { font-family: 'Inter', sans-serif; background-color: #fff; color: #333; }
+        .sidebar-item.active { background-color: #f5f5f5; color: #5c67f2; font-weight: 600; }
+        
+        /* Checkbox Custom */
+        .cb-custom {
+            appearance: none;
+            width: 18px; height: 18px;
+            border-radius: 4px;
+            border: 2px solid;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            background: white;
+        }
+        .cb-p1 { border-color: #ff4d4f; } /* High */
+        .cb-p2 { border-color: #faad14; } /* Medium */
+        .cb-p3 { border-color: #1890ff; } /* Low */
+        .cb-p4 { border-color: #d1d1d1; } /* None */
+
+        .cb-custom:checked {
+            background-color: #d1d1d1 !important;
+            border-color: #d1d1d1 !important;
+        }
+        .cb-custom:checked::after {
+            content: '✓'; color: white; font-size: 11px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        .task-text.completed { color: #afafaf; text-decoration: line-through; }
+        .completed-section-header { cursor: pointer; user-select: none; }
     </style>
 </head>
-<body class="flex min-h-screen bg-white">
+<body class="flex min-h-screen">
 
-    <aside class="w-64 bg-gray-50 border-r border-gray-100 flex flex-col pt-8">
+    <aside class="w-64 bg-[#fafafa] border-r border-gray-100 flex flex-col pt-8">
         <div class="px-6 mb-8 flex items-center gap-2">
-            <div class="w-8 h-8 bg-[#5c67f2] rounded-lg flex items-center justify-center text-white font-bold text-xl">✓</div>
-            <span class="text-lg font-bold">Focus List</span>
+            <div class="w-7 h-7 bg-[#5c67f2] rounded shadow-sm flex items-center justify-center text-white font-bold">✓</div>
+            <span class="font-bold text-gray-700">TickTick Focus</span>
         </div>
-        <nav class="flex-1 px-3 space-y-1">
-            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm">
-                <span>📅</span> Hôm nay
+        <nav class="px-3 space-y-1">
+            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm">
+                <span>📅</span> Today
             </button>
-            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-gray-600 hover:bg-gray-100">
-                <span>🌅</span> Ngày mai
+            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">
+                <span>📅</span> Tomorrow
             </button>
         </nav>
     </aside>
 
-    <main class="flex-1 p-8 md:p-12 max-w-4xl">
-        <header class="mb-8">
-            <h2 id="view-title" class="text-2xl font-bold text-gray-800">Hôm nay</h2>
-            <p id="stats-text" class="text-sm text-gray-400 mt-1">0 công việc</p>
-        </header>
+    <main class="flex-1 p-8 max-w-3xl mx-auto">
+        <h2 id="view-title" class="text-2xl font-bold mb-6 text-gray-800">Hôm nay</h2>
 
-        <div class="mb-6 border border-gray-200 rounded-xl p-3 shadow-sm focus-within:ring-1 focus-within:ring-blue-200">
-            <input type="text" id="task-input" placeholder="Việc cần làm hôm nay..." class="w-full bg-transparent outline-none text-sm py-2 px-1">
-            <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
-                <div class="flex gap-4">
-                    <select id="priority-input" class="text-xs text-gray-500 bg-transparent outline-none border border-gray-100 rounded px-1">
-                        <option value="4">⚪ Không ưu tiên</option>
-                        <option value="1">🔴 Ưu tiên cao</option>
-                        <option value="2">🟡 Trung bình</option>
-                        <option value="3">🔵 Thấp</option>
-                    </select>
-                    <select id="category-input" class="text-xs text-gray-500 bg-transparent outline-none border border-gray-100 rounded px-1">
-                        <option value="Work">Work</option>
-                        <option value="Học tập">Học tập</option>
-                        <option value="Việc nhà">Việc nhà</option>
-                        <option value="Thể dục">Thể dục</option>
-                    </select>
-                </div>
-                <button onclick="addTask()" class="bg-[#5c67f2] text-white text-xs font-bold px-4 py-1.5 rounded-lg hover:bg-blue-700">Lưu</button>
+        <div class="mb-8 bg-[#f4f4f4] rounded-xl p-1 flex items-center shadow-sm">
+            <span class="px-3 text-gray-400 text-xl font-light">+</span>
+            <input type="text" id="task-input" placeholder="Add task" class="flex-1 bg-transparent py-2 outline-none text-sm text-gray-600">
+            <div class="flex items-center gap-2 pr-2">
+                <select id="priority-input" class="bg-transparent text-sm outline-none cursor-pointer">
+                    <option value="4">⚪ None</option>
+                    <option value="1">🔴 High</option>
+                    <option value="2">🟡 Medium</option>
+                    <option value="3">🔵 Low</option>
+                </select>
+                <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1 rounded-lg">SAVE</button>
             </div>
         </div>
 
-        <ul id="task-list" class="space-y-2"></ul>
+        <div id="active-tasks" class="space-y-1 mb-8"></div>
+
+        <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
+            <div class="completed-section-header flex items-center gap-2 text-gray-400 text-sm font-medium mb-4" onclick="toggleCompletedList()">
+                <span id="chevron">⌄</span> Completed <span id="completed-count" class="ml-1">0</span>
+            </div>
+            <div id="completed-tasks" class="space-y-1"></div>
+        </div>
     </main>
 
     <script>
@@ -71,14 +89,13 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g'; 
         const client = supabase.createClient(SB_URL, SB_KEY);
 
-        let currentTab = 'today';
         let allTasks = [];
+        let currentTab = 'today';
+        let showCompleted = true;
 
-        // Lấy ngày định dạng YYYY-MM-DD
         const getFormattedDate = (offset = 0) => {
-            const date = new Date();
-            date.setDate(date.getDate() + offset);
-            return date.toISOString().split('T')[0];
+            const d = new Date(); d.setDate(d.getDate() + offset);
+            return d.toISOString().split('T')[0];
         };
 
         async function fetchTasks() {
@@ -89,14 +106,12 @@
         async function addTask() {
             const input = document.getElementById('task-input');
             if (!input.value) return;
-
             const targetDate = currentTab === 'today' ? getFormattedDate(0) : getFormattedDate(1);
-            
             await client.from('tasks').insert([{ 
                 text: input.value, 
-                category: document.getElementById('category-input').value,
                 priority: parseInt(document.getElementById('priority-input').value),
-                task_date: targetDate
+                task_date: targetDate,
+                category: 'Other'
             }]);
             input.value = '';
             fetchTasks();
@@ -108,8 +123,7 @@
         }
 
         async function deleteTask(id) {
-            await client.from('tasks').delete().eq('id', id);
-            fetchTasks();
+            if(confirm('Delete?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); }
         }
 
         function switchTab(tab) {
@@ -120,34 +134,44 @@
             render();
         }
 
+        function toggleCompletedList() {
+            showCompleted = !showCompleted;
+            document.getElementById('completed-tasks').classList.toggle('hidden');
+            document.getElementById('chevron').innerText = showCompleted ? '⌄' : '›';
+        }
+
         function render() {
-            const listEl = document.getElementById('task-list');
+            const activeEl = document.getElementById('active-tasks');
+            const completedEl = document.getElementById('completed-tasks');
             const todayStr = getFormattedDate(0);
             const tomorrowStr = getFormattedDate(1);
 
-            const filtered = allTasks.filter(t => {
-                if (currentTab === 'today') {
-                    // Hiện việc của hôm nay HOẶC việc quá hạn chưa xong
-                    return t.task_date === todayStr || (t.task_date < todayStr && !t.completed);
-                } else {
-                    return t.task_date === tomorrowStr;
-                }
+            const currentTasks = allTasks.filter(t => {
+                if (currentTab === 'today') return t.task_date <= todayStr;
+                return t.task_date === tomorrowStr;
             });
 
-            listEl.innerHTML = filtered.map(t => `
-                <li class="group flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg hover:shadow-sm transition priority-${t.priority}">
+            const active = currentTasks.filter(t => !t.completed);
+            const completed = currentTasks.filter(t => t.completed);
+
+            const taskMapper = t => `
+                <div class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50 last:border-0">
                     <div class="flex items-center gap-3">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})">
-                        <div class="flex flex-col">
-                            <span class="text-sm ${t.completed ? 'completed-text' : 'text-gray-700'}">${t.text}</span>
-                            <span class="text-[10px] text-gray-400 uppercase font-medium">${t.category} ${t.task_date < todayStr ? '• <span class="text-red-400">Quá hạn</span>' : ''}</span>
-                        </div>
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} 
+                            onchange="toggleTask(${t.id}, ${t.completed})" 
+                            class="cb-custom cb-p${t.priority}">
+                        <span class="text-sm task-text ${t.completed ? 'completed' : 'text-gray-700'}">${t.text}</span>
                     </div>
                     <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 px-2 transition">✕</button>
-                </li>
-            `).join('');
+                </div>
+            `;
 
-            document.getElementById('stats-text').innerText = `${filtered.length} công việc`;
+            activeEl.innerHTML = active.map(taskMapper).join('');
+            completedEl.innerHTML = completed.map(taskMapper).join('');
+            
+            // Xử lý khu vực Completed
+            document.getElementById('completed-count').innerText = completed.length;
+            document.getElementById('completed-container').style.display = completed.length > 0 ? 'block' : 'none';
         }
 
         window.onload = fetchTasks;
