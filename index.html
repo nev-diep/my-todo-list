@@ -3,46 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Focus List</title>
+    <title>TickTick Clone - Focus List</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        .completed { text-decoration: line-through; opacity: 0.5; }
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #333; }
+        .sidebar-item.active { background-color: #f0f0f0; color: #5c67f2; font-weight: 600; }
+        .sidebar-item.active svg { color: #5c67f2; }
+        .task-item:hover .delete-btn { opacity: 1; }
+        .completed-text { text-decoration: line-through; color: #aaa; }
+        /* Checkbox phong cách TickTick */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 18px; height: 18px;
+            border: 1.5px solid #d1d1d1;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #5c67f2;
+            border-color: #5c67f2;
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4">
-    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 mt-4">
-        <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">🎯 My Focus List</h1>
+<body class="flex min-h-screen">
 
-        <div class="flex mb-6 bg-gray-100 rounded-xl p-1">
-            <button onclick="switchTab('today')" id="tab-today" class="flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600">Hôm nay</button>
-            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="flex-1 py-2 rounded-lg text-gray-500">Ngày mai</button>
+    <aside class="w-64 bg-gray-50 border-r border-gray-200 flex flex-col pt-8">
+        <div class="px-6 mb-8 flex items-center gap-2">
+            <div class="w-8 h-8 bg-[#5c67f2] rounded-lg flex items-center justify-center text-white font-bold">✓</div>
+            <span class="text-lg font-bold tracking-tight">Focus List</span>
         </div>
+        
+        <nav class="flex-1 px-3 space-y-1">
+            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md transition text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Hôm nay
+            </button>
+            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md transition text-sm text-gray-600 hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Ngày mai
+            </button>
+        </nav>
 
-        <div class="mb-6 bg-blue-50 p-4 rounded-xl text-sm font-medium text-blue-700">
-            <div class="flex justify-between mb-2"><span>Tiến độ:</span><span id="stats-percent">0%</span></div>
-            <div class="w-full bg-blue-200 rounded-full h-2"><div id="stats-bar" class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div></div>
+        <div class="p-6 text-xs text-gray-400 border-t border-gray-100">
+            Cloud Sync Enabled
         </div>
+    </aside>
 
-        <div class="space-y-3 mb-8">
-            <input type="text" id="task-input" placeholder="Việc cần làm..." class="w-full border-2 border-gray-100 rounded-xl px-4 py-2 focus:border-blue-400 outline-none">
-            <div class="flex gap-2">
-                <select id="category-input" class="flex-1 border-2 border-gray-100 rounded-xl px-2 py-2 bg-white text-sm">
-                    <option value="Work">💼 Work</option>
-                    <option value="Học tập">📚 Học tập</option>
-                    <option value="Việc nhà">🏠 Việc nhà</option>
-                    <option value="Thể dục">🏃 Thể dục</option>
-                    <option value="Other">✨ Other</option>
+    <main class="flex-1 p-8 md:p-12 max-w-4xl">
+        <header class="mb-8 flex justify-between items-end">
+            <div>
+                <h2 id="view-title" class="text-2xl font-bold text-gray-800">Hôm nay</h2>
+                <p class="text-sm text-gray-400 mt-1" id="stats-text">Đang tải...</p>
+            </div>
+            <div class="relative w-12 h-12">
+                <svg class="w-full h-full" viewBox="0 0 36 36">
+                    <path class="text-gray-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="progress-circle" class="text-[#5c67f2] transition-all duration-500" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+            </div>
+        </header>
+
+        <div class="mb-8 bg-gray-50 rounded-lg p-3 focus-within:bg-white focus-within:shadow-sm border border-transparent focus-within:border-gray-200 transition">
+            <div class="flex gap-3 items-center">
+                <span class="text-[#5c67f2] text-xl ml-1">+</span>
+                <input type="text" id="task-input" placeholder="Thêm công việc vào..." class="flex-1 bg-transparent outline-none text-sm py-1">
+                <select id="category-input" class="bg-transparent text-xs text-gray-500 outline-none cursor-pointer hover:text-gray-800">
+                    <option value="Work">Work</option>
+                    <option value="Học tập">Học tập</option>
+                    <option value="Việc nhà">Việc nhà</option>
+                    <option value="Thể dục">Thể dục</option>
+                    <option value="Other">Other</option>
                 </select>
-                <button onclick="addTask()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">THÊM</button>
+                <button onclick="addTask()" class="text-[#5c67f2] font-semibold text-sm px-2">Lưu</button>
             </div>
         </div>
 
-        <ul id="task-list" class="space-y-3"></ul>
-    </div>
+        <ul id="task-list" class="space-y-1">
+            </ul>
+    </main>
 
     <script>
-        // 1. CẤU HÌNH - BẠN CHỈ CẦN THAY KEY VÀO ĐÂY
         const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g'; 
 
@@ -50,15 +102,12 @@
         let allTasks = [];
         let currentTab = 'today';
 
-        // Khởi tạo kết nối an toàn
         try {
             myApp = supabase.createClient(SB_URL, SB_KEY);
-        } catch (e) {
-            alert("Lỗi cấu hình URL hoặc Key!");
-        }
+        } catch (e) { console.error(e); }
 
         async function fetchTasks() {
-            const { data, error } = await myApp.from('tasks').select('*').order('created_at', { ascending: true });
+            const { data, error } = await myApp.from('tasks').select('*').order('created_at', { ascending: false });
             if (!error) { allTasks = data || []; render(); }
         }
 
@@ -71,7 +120,6 @@
                 day: currentTab 
             }]);
             if (!error) { input.value = ''; fetchTasks(); }
-            else { alert("Lỗi RLS: Bạn chưa tắt bảo mật bảng tasks trên Supabase!"); }
         }
 
         async function toggleTask(id, status) {
@@ -80,36 +128,40 @@
         }
 
         async function deleteTask(id) {
-            if(confirm('Xóa?')) { await myApp.from('tasks').delete().eq('id', id); fetchTasks(); }
+            await myApp.from('tasks').delete().eq('id', id);
+            fetchTasks();
         }
 
         function switchTab(tab) {
             currentTab = tab;
-            document.getElementById('tab-today').className = tab === 'today' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
-            document.getElementById('tab-tomorrow').className = tab === 'tomorrow' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
+            document.getElementById('view-title').innerText = tab === 'today' ? 'Hôm nay' : 'Ngày mai';
+            document.getElementById('tab-today').className = `sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md transition text-sm ${tab === 'today' ? 'active' : 'text-gray-600 hover:bg-gray-100'}`;
+            document.getElementById('tab-tomorrow').className = `sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md transition text-sm ${tab === 'tomorrow' ? 'active' : 'text-gray-600 hover:bg-gray-100'}`;
             render();
         }
 
         function render() {
             const listEl = document.getElementById('task-list');
             const filtered = allTasks.filter(t => t.day === currentTab);
+            
             listEl.innerHTML = filtered.map(t => `
-                <li class="flex items-center justify-between p-4 border-2 border-gray-50 rounded-2xl bg-gray-50/50">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="w-5 h-5">
-                        <div>
-                            <p class="${t.completed ? 'completed' : ''} font-semibold text-gray-700">${t.text}</p>
-                            <span class="text-[10px] text-blue-500 font-bold uppercase">${t.category}</span>
+                <li class="task-item group flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 px-2 rounded-md transition">
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})">
+                        <div class="flex flex-col">
+                            <span class="text-sm ${t.completed ? 'completed-text' : 'text-gray-700'}">${t.text}</span>
+                            <span class="text-[10px] text-gray-400 uppercase tracking-tighter">${t.category}</span>
                         </div>
                     </div>
-                    <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 font-bold">✕</button>
+                    <button onclick="deleteTask(${t.id})" class="delete-btn opacity-0 text-gray-300 hover:text-red-400 transition text-sm pr-2">✕</button>
                 </li>
             `).join('');
             
             const done = filtered.filter(t => t.completed).length;
             const percent = filtered.length ? Math.round((done/filtered.length)*100) : 0;
-            document.getElementById('stats-percent').innerText = percent + '%';
-            document.getElementById('stats-bar').style.width = percent + '%';
+            
+            document.getElementById('stats-text').innerText = `${done}/${filtered.length} công việc đã hoàn thành`;
+            document.getElementById('progress-circle').setAttribute('stroke-dasharray', `${percent}, 100`);
         }
 
         window.onload = fetchTasks;
