@@ -54,102 +54,111 @@
         const SUPABASE_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// SỬA LỖI: Đổi tên biến từ 'supabase' thành 'supabaseClient' để tránh trùng lặp
+    let supabaseClient;
+    try {
+        supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    } catch (e) {
+        console.error("Lỗi khởi tạo Supabase:", e);
+    }
 
-        let currentTab = 'today';
-        let allTasks = [];
+    let currentTab = 'today';
+    let allTasks = [];
 
-        // Lấy dữ liệu từ Cloud
-        async function fetchTasks() {
-            const { data, error } = await supabase
+    async function fetchTasks() {
+        try {
+            // Sử dụng supabaseClient thay vì supabase
+            const { data, error } = await supabaseClient
                 .from('tasks')
                 .select('*')
                 .order('created_at', { ascending: true });
             
-            if (error) {
-                console.error('Lỗi:', error);
-                return;
-            }
-            allTasks = data;
+            if (error) throw error;
+            allTasks = data || [];
             render();
+        } catch (error) {
+            console.error('Lỗi tải dữ liệu:', error.message);
         }
+    }
 
-        // Thêm task mới
-        async function addTask() {
-            const input = document.getElementById('task-input');
-            const category = document.getElementById('category-input').value;
-            if (!input.value) return;
+    async function addTask() {
+        const input = document.getElementById('task-input');
+        const category = document.getElementById('category-input').value;
+        if (!input.value) return;
 
-            const btn = event.target;
-            btn.classList.add('loading');
-
-            const { error } = await supabase.from('tasks').insert([
+        try {
+            const { error } = await supabaseClient.from('tasks').insert([
                 { text: input.value, category: category, day: currentTab, completed: false }
             ]);
-
-            if (!error) {
-                input.value = '';
-                await fetchTasks();
-            }
-            btn.classList.remove('loading');
+            if (error) throw error;
+            input.value = '';
+            await fetchTasks();
+        } catch (error) {
+            alert("Không thể thêm: " + error.message);
         }
+    }
 
-        // Cập nhật trạng thái hoàn thành
-        async function toggleTask(id, currentStatus) {
-            const { error } = await supabase
+    async function toggleTask(id, currentStatus) {
+        try {
+            const { error } = await supabaseClient
                 .from('tasks')
                 .update({ completed: !currentStatus })
                 .eq('id', id);
-            
+            if (error) throw error;
+            await fetchTasks();
+        } catch (error) {
+            alert("Lỗi cập nhật: " + error.message);
+        }
+    }
+
+    async function deleteTask(id) {
+        if(!confirm('Xóa việc này?')) return;
+        try {
+            const { error } = await supabaseClient.from('tasks').delete().eq('id', id);
             if (!error) await fetchTasks();
+        } catch (error) {
+            alert("Lỗi xóa: " + error.message);
         }
+    }
 
-        // Xóa task
-        async function deleteTask(id) {
-            if(!confirm('Xóa việc này?')) return;
-            const { error } = await supabase.from('tasks').delete().eq('id', id);
-            if (!error) await fetchTasks();
-        }
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-today').className = tab === 'today' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
+        document.getElementById('tab-tomorrow').className = tab === 'tomorrow' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
+        render();
+    }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tab-today').className = tab === 'today' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
-            document.getElementById('tab-tomorrow').className = tab === 'tomorrow' ? 'flex-1 py-2 rounded-lg bg-white shadow-sm font-semibold text-blue-600' : 'flex-1 py-2 text-gray-500';
-            render();
-        }
-
-        function render() {
-            const listEl = document.getElementById('task-list');
-            const filteredTasks = allTasks.filter(t => t.day === currentTab);
-            
-            if (filteredTasks.length === 0) {
-                listEl.innerHTML = `<p class="text-center text-gray-400 py-10">Hết việc rồi, nghỉ ngơi thôi! ☕</p>`;
-            } else {
-                listEl.innerHTML = filteredTasks.map(t => `
-                    <li class="flex items-center justify-between p-4 border-2 border-gray-50 rounded-2xl hover:border-blue-100 transition bg-gray-50/50">
-                        <div class="flex items-center gap-4">
-                            <input type="checkbox" ${t.completed ? 'checked' : ''} 
-                                onchange="toggleTask(${t.id}, ${t.completed})" 
-                                class="w-6 h-6 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500">
-                            <div>
-                                <p class="${t.completed ? 'completed' : ''} font-semibold text-gray-700">${t.text}</p>
-                                <span class="text-[10px] bg-white border border-blue-200 text-blue-500 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">${t.category}</span>
-                            </div>
+    function render() {
+        const listEl = document.getElementById('task-list');
+        const filteredTasks = allTasks.filter(t => t.day === currentTab);
+        
+        if (filteredTasks.length === 0) {
+            listEl.innerHTML = `<p class="text-center text-gray-400 py-10 font-medium">Hết việc rồi, nghỉ ngơi thôi! ☕</p>`;
+        } else {
+            listEl.innerHTML = filteredTasks.map(t => `
+                <li class="flex items-center justify-between p-4 border-2 border-gray-50 rounded-2xl bg-gray-50/50">
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} 
+                            onchange="toggleTask(${t.id}, ${t.completed})" 
+                            class="w-6 h-6 rounded-full border-gray-300 text-blue-600">
+                        <div>
+                            <p class="${t.completed ? 'completed' : ''} font-semibold text-gray-700 text-left">${t.text}</p>
+                            <span class="text-[10px] bg-white border border-blue-200 text-blue-500 px-2 py-0.5 rounded-md font-bold uppercase">${t.category}</span>
                         </div>
-                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 transition px-2">✕</button>
-                    </li>
-                `).join('');
-            }
-
-            // Cập nhật thống kê
-            const doneCount = filteredTasks.filter(t => t.completed).length;
-            const total = filteredTasks.length;
-            const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
-            document.getElementById('stats-percent').innerText = percent + '%';
-            document.getElementById('stats-bar').style.width = percent + '%';
+                    </div>
+                    <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 px-2 font-bold">✕</button>
+                </li>
+            `).join('');
         }
 
-        // Chạy lần đầu
-        fetchTasks();
-    </script>
+        const doneCount = filteredTasks.filter(t => t.completed).length;
+        const total = filteredTasks.length;
+        const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+        document.getElementById('stats-percent').innerText = percent + '%';
+        document.getElementById('stats-bar').style.width = percent + '%';
+    }
+
+    window.onload = fetchTasks;
+</script>
 </body>
 </html>
