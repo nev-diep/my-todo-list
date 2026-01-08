@@ -3,77 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TickTick Pro - Focus & Points</title>
+    <title>My To-do List</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #fff; color: #333; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #fff; color: #333; overflow: hidden; }
         .sidebar-item.active { background-color: #f5f5f5; color: #5c67f2; font-weight: 600; }
         
-        .input-container {
-            background-color: #f4f4f4;
-            border: 1px solid transparent;
-            transition: all 0.2s ease-in-out;
-        }
-        .input-container:focus-within {
-            background-color: #ffffff !important;
-            border-color: #5c67f2;
-            box-shadow: 0 0 0 2px rgba(92, 103, 242, 0.1);
-        }
+        /* Input Focus Effect */
+        .input-container { background-color: #f4f4f4; border: 1px solid transparent; transition: all 0.2s ease; }
+        .input-container:focus-within { background-color: #fff !important; border-color: #5c67f2; box-shadow: 0 0 0 2px rgba(92,103,242,0.1); }
 
-        .cb-custom {
-            appearance: none; width: 18px; height: 18px;
-            border-radius: 4px; border: 2px solid;
-            cursor: pointer; position: relative;
-            transition: all 0.2s; background: white;
-        }
-        .cb-p1 { border-color: #ff4d4f; }
-        .cb-p2 { border-color: #faad14; }
-        .cb-p3 { border-color: #1890ff; }
-        .cb-p4 { border-color: #d1d1d1; }
+        /* Custom Checkbox */
+        .cb-custom { appearance: none; width: 18px; height: 18px; border-radius: 4px; border: 2px solid; cursor: pointer; position: relative; background: white; }
+        .cb-p1 { border-color: #ff4d4f; } .cb-p2 { border-color: #faad14; } .cb-p3 { border-color: #1890ff; } .cb-p4 { border-color: #d1d1d1; }
+        .cb-custom:checked { background-color: #d1d1d1 !important; border-color: #d1d1d1 !important; }
+        .cb-custom:checked::after { content: '✓'; color: white; font-size: 11px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
-        .cb-custom:checked {
-            background-color: #d1d1d1 !important;
-            border-color: #d1d1d1 !important;
-        }
-        .cb-custom:checked::after {
-            content: '✓'; color: white; font-size: 11px;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-
-        .task-text.completed { color: #afafaf; }
-        #progress-circle { stroke-linecap: round; transition: stroke-dashoffset 0.5s ease-out; }
+        /* Calendar Grid */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .calendar-day { aspect-ratio: 1/1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #f0f0f0; transition: transform 0.2s; }
+        .calendar-day:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         
-        /* Side Area Stats */
-        .stats-card { background: #fafafa; border-radius: 12px; padding: 15px; border: 1px solid #f0f0f0; }
+        /* Stats Styles */
+        .stats-card { background: #fafafa; border-radius: 12px; padding: 12px; border: 1px solid #f0f0f0; }
     </style>
 </head>
-<body class="flex min-h-screen">
+<body class="flex h-screen">
 
     <aside class="w-60 bg-[#fafafa] border-r border-gray-100 flex flex-col pt-8 shrink-0">
         <div class="px-6 mb-8 flex items-center gap-2">
             <div class="w-7 h-7 bg-[#5c67f2] rounded shadow-sm flex items-center justify-center text-white font-bold">✓</div>
-            <span class="font-bold text-gray-700 uppercase tracking-wider text-sm">Focus Task</span>
+            <span class="font-bold text-gray-700 text-sm tracking-tight">DISCIPLINE</span>
         </div>
         <nav class="px-3 space-y-1">
-            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm">
-                <span>📅</span> Today
-            </button>
-            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">
-                <span>🌅</span> Tomorrow
-            </button>
-            <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">
-                <span>📊</span> Calendar
-            </button>
+            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm"><span>📅</span> Today</button>
+            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>🌅</span> Tomorrow</button>
+            <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>🗓️</span> Calendar</button>
         </nav>
     </aside>
 
-    <main class="flex-1 p-8 max-w-2xl mx-auto overflow-y-auto">
-        <header class="mb-6 flex justify-between items-center">
+    <main class="flex-1 p-8 overflow-y-auto bg-white">
+        <header class="mb-6 flex justify-between items-center max-w-2xl mx-auto">
             <div>
                 <h2 id="view-title" class="text-2xl font-bold text-gray-800">Today</h2>
-                <p id="stats-text" class="text-xs text-gray-400 mt-1">0 công việc</p>
+                <p id="stats-text" class="text-xs text-gray-400 mt-1">0 tasks</p>
             </div>
             <div id="circle-container" class="relative w-12 h-12 flex items-center justify-center">
                 <svg class="w-full h-full transform -rotate-90">
@@ -85,47 +60,51 @@
             </div>
         </header>
 
-        <div id="todo-view">
+        <div id="todo-view" class="max-w-2xl mx-auto">
             <div class="input-container mb-8 rounded-xl p-1 flex items-center shadow-sm">
                 <span class="px-3 text-gray-400 text-xl font-light">+</span>
-                <input type="text" id="task-input" placeholder="Add task" class="flex-1 bg-transparent py-2 outline-none text-sm text-gray-600">
+                <input type="text" id="task-input" placeholder="What's your focus?" class="flex-1 bg-transparent py-2 outline-none text-sm text-gray-600">
                 <div class="flex items-center gap-2 pr-2">
                     <select id="priority-input" class="bg-transparent text-sm outline-none cursor-pointer text-gray-500">
-                        <option value="4">🏳️ None</option>
-                        <option value="1">🚩 High</option>
-                        <option value="2">🟠 Medium</option>
-                        <option value="3">🔵 Low</option>
+                    <option value="4">⚪ None</option>
+                    <option value="1">🔴 High</option>
+                    <option value="2">🟡 Medium</option>
+                    <option value="3">🔵 Low</option>
                     </select>
-                    <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1 rounded-lg">SAVE</button>
+                    <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg">ADD</button>
                 </div>
             </div>
             <div id="active-tasks" class="space-y-1"></div>
             <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
-                <div class="flex items-center gap-2 text-gray-500 text-sm font-semibold mb-4 cursor-pointer" onclick="toggleCompletedList()">
-                    <span id="chevron-svg" class="transition-transform duration-200">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </span> 
-                    Completed <span id="completed-count" class="ml-1 font-normal opacity-60">0</span>
+                <div class="flex items-center gap-2 text-gray-400 text-xs font-bold mb-4 cursor-pointer uppercase tracking-widest" onclick="toggleCompletedList()">
+                    <span id="chevron-svg" class="transition-transform duration-200 rotate-90"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span> 
+                    Completed (<span id="completed-count">0</span>)
                 </div>
                 <div id="completed-tasks" class="space-y-1"></div>
             </div>
         </div>
 
-        <div id="calendar-view" class="hidden">
-            <div id="history-list" class="space-y-3"></div>
+        <div id="calendar-view" class="hidden max-w-4xl mx-auto">
+            <div class="calendar-grid" id="calendar-container"></div>
         </div>
     </main>
 
-    <aside class="w-72 bg-white border-l border-gray-100 p-6 shrink-0">
-        <div class="text-center mb-8">
-            <p class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">Total Score</p>
-            <h1 id="total-score" class="text-5xl font-black text-[#5c67f2]">0</h1>
+    <aside class="w-80 bg-[#fafafa] border-l border-gray-100 p-6 flex flex-col shrink-0">
+        <div class="text-center mb-10">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-black mb-2">Lifetime Score</p>
+            <h1 id="total-score" class="text-6xl font-black text-[#5c67f2] drop-shadow-sm">0</h1>
+            <div id="streak-badge" class="mt-3 inline-block bg-orange-100 text-orange-600 text-[10px] px-2 py-1 rounded-full font-bold italic">🔥 0 Day Streak</div>
         </div>
 
-        <div class="space-y-4">
-            <h4 class="text-xs font-bold text-gray-500 uppercase">Today's Stats</h4>
-            <div id="priority-stats" class="space-y-3">
-                </div>
+        <div class="flex-1 space-y-6 overflow-y-auto">
+            <div>
+                <h4 class="text-[11px] font-black text-gray-400 uppercase mb-4 tracking-widest border-b pb-2">Analysis (Last 12 Months)</h4>
+                <div id="priority-stats" class="space-y-3"></div>
+            </div>
+            
+            <div class="stats-card bg-white italic text-[11px] text-gray-500 border-dashed">
+                "Kỷ luật là cầu nối giữa mục tiêu và thành tựu."
+            </div>
         </div>
     </aside>
 
@@ -151,20 +130,13 @@
         async function addTask() {
             const input = document.getElementById('task-input');
             if (!input.value) return;
-            const targetDate = currentTab === 'calendar' ? getFormattedDate(0) : (currentTab === 'today' ? getFormattedDate(0) : getFormattedDate(1));
-            await client.from('tasks').insert([{ 
-                text: input.value, 
-                priority: parseInt(document.getElementById('priority-input').value),
-                task_date: targetDate,
-                category: 'Task'
-            }]);
-            input.value = '';
-            fetchTasks();
+            const targetDate = currentTab === 'tomorrow' ? getFormattedDate(1) : getFormattedDate(0);
+            await client.from('tasks').insert([{ text: input.value, priority: parseInt(document.getElementById('priority-input').value), task_date: targetDate }]);
+            input.value = ''; fetchTasks();
         }
 
         async function toggleTask(id, status) {
-            await client.from('tasks').update({ completed: !status }).eq('id', id);
-            fetchTasks();
+            await client.from('tasks').update({ completed: !status }).eq('id', id); fetchTasks();
         }
 
         async function deleteTask(id) {
@@ -173,11 +145,10 @@
 
         function switchTab(tab) {
             currentTab = tab;
-            const isCal = tab === 'calendar';
-            document.getElementById('todo-view').classList.toggle('hidden', isCal);
-            document.getElementById('calendar-view').classList.toggle('hidden', !isCal);
-            document.getElementById('circle-container').style.visibility = isCal ? 'hidden' : 'visible';
-            document.getElementById('view-title').innerText = isCal ? 'Calendar' : (tab === 'today' ? 'Today' : 'Tomorrow');
+            document.getElementById('todo-view').classList.toggle('hidden', tab === 'calendar');
+            document.getElementById('calendar-view').classList.toggle('hidden', tab !== 'calendar');
+            document.getElementById('circle-container').style.opacity = tab === 'calendar' ? '0' : '1';
+            document.getElementById('view-title').innerText = tab.charAt(0).toUpperCase() + tab.slice(1);
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
             render();
@@ -190,109 +161,69 @@
         }
 
         function render() {
-            const activeEl = document.getElementById('active-tasks');
-            const completedEl = document.getElementById('completed-tasks');
             const todayStr = getFormattedDate(0);
             
-            // 1. Tính điểm (Score Logic)
-            let score = 0;
+            // 1. LIFETIME SCORE & STREAK
+            let totalScore = 0;
+            const points = { 1: 4, 2: 3, 3: 2, 4: 1 };
             allTasks.forEach(t => {
-                const points = { 1: 4, 2: 3, 3: 2, 4: 1 };
-                if (t.completed) {
-                    score += points[t.priority];
-                } else if (t.task_date < todayStr) {
-                    score -= points[t.priority]; // Trừ điểm nếu quá hạn chưa xong
-                }
+                if (t.completed) totalScore += points[t.priority];
+                else if (t.task_date < todayStr) totalScore -= points[t.priority];
             });
-            document.getElementById('total-score').innerText = score;
+            document.getElementById('total-score').innerText = totalScore;
 
-            // 2. Lọc task cho View chính
-            const viewTasks = allTasks.filter(t => {
-                if (currentTab === 'today') return t.task_date <= todayStr;
-                if (currentTab === 'tomorrow') return t.task_date === getFormattedDate(1);
-                return true;
-            });
+            // 2. RIGHT SIDE STATS (ALL TIME)
+            const pTypes = [{ id: 1, label: 'High', color: 'bg-red-500', icon: '🚩' }, { id: 2, label: 'Med', color: 'bg-orange-400', icon: '🟠' }, { id: 3, label: 'Low', color: 'bg-blue-400', icon: '🔵' }, { id: 4, label: 'None', color: 'bg-gray-300', icon: '🏳️' }];
+            document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
+                const pTasks = allTasks.filter(t => t.priority === p.id);
+                const pDone = pTasks.filter(t => t.completed).length;
+                const pPercent = pTasks.length ? Math.round((pDone / pTasks.length) * 100) : 0;
+                return `<div class="stats-card"><div class="flex justify-between text-[10px] font-bold mb-1"><span>${p.icon} ${p.label}</span><span>${pDone}/${pTasks.length}</span></div><div class="w-full bg-gray-200 h-1 rounded-full"><div class="${p.color} h-full" style="width:${pPercent}%"></div></div></div>`;
+            }).join('');
 
+            // 3. MAIN LIST RENDER
+            const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
 
-            // 3. Render Productivity Stats (Right Side)
-            const todayTasks = allTasks.filter(t => t.task_date === todayStr);
-            const pTypes = [
-                { id: 1, label: 'High', color: 'bg-red-500', icon: '🚩' },
-                { id: 2, label: 'Medium', color: 'bg-orange-400', icon: '🟠' },
-                { id: 3, label: 'Low', color: 'bg-blue-400', icon: '🔵' },
-                { id: 4, label: 'None', color: 'bg-gray-300', icon: '🏳️' }
-            ];
-
-            document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
-                const pTasks = todayTasks.filter(t => t.priority === p.id);
-                const pDone = pTasks.filter(t => t.completed).length;
-                const pPercent = pTasks.length > 0 ? Math.round((pDone / pTasks.length) * 100) : 0;
-                return `
-                    <div class="stats-card">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[11px] font-bold text-gray-500 uppercase">${p.icon} ${p.label}</span>
-                            <span class="text-xs font-bold text-gray-700">${pDone}/${pTasks.length}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                            <div class="${p.color} h-full transition-all" style="width: ${pPercent}%"></div>
-                        </div>
-                        <p class="text-[10px] text-right mt-1 text-gray-400">${pPercent}% Success</p>
-                    </div>
-                `;
-            }).join('');
-
-            // 4. Render Task List
-            const flags = {
-                1: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#ff4d4f"><path d="M5 21V4h9l1 2h6v10h-7l-1-2H7v7H5z"/></svg>',
-                2: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#faad14"><path d="M5 21V4h9l1 2h6v10h-7l-1-2H7v7H5z"/></svg>',
-                3: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#5c67f2"><path d="M5 21V4h9l1 2h6v10h-7l-1-2H7v7H5z"/></svg>',
-                4: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M5 21V4h9l1 2h6v10h-7l-1-2H7v7H5z"/></svg>'
-            };
-
             const taskMapper = t => `
-                <div class="group flex items-center justify-between py-2.5 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50 last:border-0">
+                <div class="group flex items-center justify-between py-2.5 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50">
                     <div class="flex items-center gap-3">
                         <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
-                        <div class="flex items-center gap-2">
-                            ${flags[t.priority]}
-                            <span class="text-sm ${t.completed ? 'text-[#afafaf]' : 'text-gray-700'}">${t.text}</span>
-                            ${t.task_date < todayStr && !t.completed ? '<span class="text-[9px] bg-red-50 text-red-400 px-1 rounded font-bold">OVERDUE</span>' : ''}
-                        </div>
+                        <span class="text-sm ${t.completed ? 'text-gray-300' : 'text-gray-700'}">${t.text}</span>
                     </div>
-                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 px-2 transition">✕</button>
-                </div>
-            `;
+                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition px-2">✕</button>
+                </div>`;
+            document.getElementById('active-tasks').innerHTML = active.map(taskMapper).join('');
+            document.getElementById('completed-tasks').innerHTML = completed.map(taskMapper).join('');
+            document.getElementById('completed-count').innerText = completed.length;
+            document.getElementById('completed-container').style.display = completed.length ? 'block' : 'none';
 
-            activeEl.innerHTML = active.map(taskMapper).join('');
-            completedEl.innerHTML = completed.map(taskMapper).join('');
-            
-            // 5. Update Progress Circle
-            const total = viewTasks.length;
-            const done = completed.length;
-            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-            document.getElementById('progress-percent').innerText = `${percent}%`;
-            document.getElementById('progress-circle').style.strokeDashoffset = 125.6 - (percent / 100) * 125.6;
-            document.getElementById('stats-text').innerText = `${total} công việc`;
-            document.getElementById('completed-count').innerText = done;
-            document.getElementById('completed-container').style.display = done > 0 ? 'block' : 'none';
-
-            // 6. Calendar History Render
+            // 4. CALENDAR GRID RENDER
             if (currentTab === 'calendar') {
+                const calendarContainer = document.getElementById('calendar-container');
                 const groups = allTasks.reduce((acc, t) => {
                     if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 };
-                    acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++;
-                    return acc;
+                    acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++; return acc;
                 }, {});
-                document.getElementById('history-list').innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(date => {
-                    const g = groups[date]; const p = Math.round((g.done/g.total)*100);
-                    return `<div class="p-4 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-center">
-                        <div><p class="text-sm font-bold text-gray-700">${date}</p><p class="text-[10px] text-gray-400">${g.done}/${g.total} tasks</p></div>
-                        <div class="flex items-center gap-3"><div class="w-24 bg-gray-200 h-1.5 rounded-full overflow-hidden"><div class="bg-[#5c67f2] h-full" style="width:${p}%"></div></div><span class="text-xs font-bold text-[#5c67f2] w-8">${p}%</span></div>
-                    </div>`;
-                }).join('');
+
+                // Hiển thị 28 ngày gần nhất
+                let gridHTML = '';
+                for (let i = 27; i >= 0; i--) {
+                    const date = getFormattedDate(-i);
+                    const data = groups[date] || { total: 0, done: 0 };
+                    const percent = data.total ? (data.done / data.total) : 0;
+                    const bgColor = data.total === 0 ? 'bg-gray-50' : (percent >= 0.8 ? 'bg-green-100 border-green-200' : (percent >= 0.5 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-100'));
+                    gridHTML += `<div class="calendar-day ${bgColor}"><span class="text-[9px] font-bold text-gray-400 mb-1">${date.split('-')[2]}</span><span class="text-[10px] font-black">${data.total ? Math.round(percent * 100) + '%' : '-'}</span></div>`;
+                }
+                calendarContainer.innerHTML = gridHTML;
             }
+
+            // 5. PROGRESS CIRCLE
+            const percent = viewTasks.length ? Math.round((completed.length / viewTasks.length) * 100) : 0;
+            document.getElementById('progress-percent').innerText = percent + '%';
+            document.getElementById('progress-circle').style.strokeDashoffset = 125.6 - (percent / 100) * 125.6;
+            document.getElementById('stats-text').innerText = `${viewTasks.length} tasks`;
         }
 
         window.onload = fetchTasks;
