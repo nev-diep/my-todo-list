@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TickTick Clone Pro</title>
+    <title>My To-do List</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fff; color: #333; }
         .sidebar-item.active { background-color: #f5f5f5; color: #5c67f2; font-weight: 600; }
-        
+        /* Trạng thái mặc định của thanh nhập liệu */
+.input-container {
+    background-color: #f4f4f4; /* Xám xịt lúc đầu */
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out; /* Giúp chuyển màu mượt mà hơn */
+}
+
+/* Trạng thái khi click vào (Focus) */
+.input-container:focus-within {
+    background-color: #ffffff !important; /* Chuyển thành nền trắng */
+    border-color: #5c67f2; /* Viền xanh dương nhẹ (màu TickTick) */
+    box-shadow: 0 0 0 2px rgba(92, 103, 242, 0.1); /* Thêm đổ bóng xanh cực nhẹ */
+}
         /* Checkbox Custom */
         .cb-custom {
             appearance: none;
@@ -36,7 +48,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
 
-        .task-text.completed { color: #afafaf; text-decoration: line-through; }
+        .task-text.completed { color: #afafaf; }
         .completed-section-header { cursor: pointer; user-select: none; }
     </style>
 </head>
@@ -45,7 +57,7 @@
     <aside class="w-64 bg-[#fafafa] border-r border-gray-100 flex flex-col pt-8">
         <div class="px-6 mb-8 flex items-center gap-2">
             <div class="w-7 h-7 bg-[#5c67f2] rounded shadow-sm flex items-center justify-center text-white font-bold">✓</div>
-            <span class="font-bold text-gray-700">TickTick Focus</span>
+            <span class="font-bold text-gray-700">Task</span>
         </div>
         <nav class="px-3 space-y-1">
             <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm">
@@ -58,9 +70,9 @@
     </aside>
 
     <main class="flex-1 p-8 max-w-3xl mx-auto">
-        <h2 id="view-title" class="text-2xl font-bold mb-6 text-gray-800">Hôm nay</h2>
+        <h2 id="view-title" class="text-2xl font-bold mb-6 text-gray-800">Today</h2>
 
-        <div class="mb-8 bg-[#f4f4f4] rounded-xl p-1 flex items-center shadow-sm">
+        <div class="input-container mb-8 rounded-xl p-1 flex items-center shadow-sm">
             <span class="px-3 text-gray-400 text-xl font-light">+</span>
             <input type="text" id="task-input" placeholder="Add task" class="flex-1 bg-transparent py-2 outline-none text-sm text-gray-600">
             <div class="flex items-center gap-2 pr-2">
@@ -70,7 +82,7 @@
                     <option value="2">🟡 Medium</option>
                     <option value="3">🔵 Low</option>
                 </select>
-                <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1 rounded-lg">SAVE</button>
+                <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-bold px-3 py-1 rounded-lg">+</button>
             </div>
         </div>
 
@@ -128,7 +140,7 @@
 
         function switchTab(tab) {
             currentTab = tab;
-            document.getElementById('view-title').innerText = tab === 'today' ? 'Hôm nay' : 'Ngày mai';
+            document.getElementById('view-title').innerText = tab === 'today' ? 'Today' : 'Tomorrow';
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
             render();
