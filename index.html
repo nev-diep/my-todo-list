@@ -43,7 +43,6 @@
             <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm"><span>📅</span> Today</button>
             <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>📅</span> Tomorrow</button>
             <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>🗓️</span> Calendar</button>
-            <button onclick="switchTab('achievements')" id="tab-achievements" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>🏆</span> Achievements</button>
         </nav>
     </aside>
 
@@ -91,19 +90,6 @@
             <div id="calendar-list"></div>
             <button onclick="addNewMonth()" class="w-full py-3 mt-4 border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 font-medium hover:border-[#5c67f2] hover:text-[#5c67f2] transition-all">+ Add Next Month</button>
         </div>
-
-        <div id="achievements-view" class="hidden max-w-2xl mx-auto pb-20">
-            <div class="bg-gray-50 rounded-xl p-5 mb-8">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Add New Achievement</p>
-                <div class="flex flex-wrap gap-3">
-                    <input type="date" id="ach-date" class="bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#5c67f2]">
-                    <input type="text" id="ach-input" placeholder="What did you achieve today?" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#5c67f2]">
-                    <button onclick="addAchievement()" class="bg-gray-800 text-white text-[10px] font-bold px-6 py-2 rounded-lg hover:bg-black transition">SAVE LOG</button>
-                </div>
-            </div>
-            <div id="achievements-list" class="space-y-6">
-                </div>
-        </div>
     </main>
 
     <aside class="w-72 bg-[#fafafa] border-l border-gray-100 p-8 flex flex-col shrink-0 overflow-y-auto">
@@ -111,6 +97,7 @@
             <p class="text-[10px] uppercase tracking-widest text-gray-400 font-medium mb-2">Lifetime Score</p>
             <h1 id="total-score" class="text-5xl font-light text-[#5c67f2] tracking-tighter">0</h1>
         </div>
+
         <div id="right-sidebar-content" class="flex-1 space-y-5">
             <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Task Efficiency</h4>
             <div id="priority-stats" class="space-y-3"></div>
@@ -124,7 +111,6 @@
         const client = supabase.createClient(SB_URL, SB_KEY);
 
         let allTasks = [];
-        let achievements = [];
         let currentTab = 'today';
         let showCompleted = true;
         let displayedMonths = 1;
@@ -136,14 +122,9 @@
             return d.toISOString().split('T')[0];
         };
 
-        document.getElementById('ach-date').value = getFormattedDate(0);
-
-        async function fetchAllData() {
-            const { data: tasks } = await client.from('tasks').select('*').order('priority', { ascending: true });
-            const { data: achs } = await client.from('achievements').select('*').order('date', { ascending: false });
-            allTasks = tasks || [];
-            achievements = achs || [];
-            render();
+        async function fetchTasks() {
+            const { data, error } = await client.from('tasks').select('*').order('priority', { ascending: true });
+            if (!error) { allTasks = data || []; render(); }
         }
 
         async function addTask() {
@@ -151,60 +132,50 @@
             if (!input.value) return;
             const targetDate = currentTab === 'tomorrow' ? getFormattedDate(1) : getFormattedDate(0);
             await client.from('tasks').insert([{ text: input.value, priority: parseInt(document.getElementById('priority-input').value), task_date: targetDate }]);
-            input.value = ''; fetchAllData();
+            input.value = ''; fetchTasks();
         }
 
-        async function addAchievement() {
-            const dateInput = document.getElementById('ach-date');
-            const textInput = document.getElementById('ach-input');
-            if (!textInput.value) return;
-            await client.from('achievements').insert([{ date: dateInput.value, content: textInput.value }]);
-            textInput.value = ''; fetchAllData();
-        }
-
-        async function deleteAchievement(id) {
-            if(confirm('Delete this achievement?')) {
-                await client.from('achievements').delete().eq('id', id);
-                fetchAllData();
+        async function pushTask(btn, id, text, priority) {
+            const tomorrow = getFormattedDate(1);
+            const { error } = await client.from('tasks').insert([{ text: text, priority: priority, task_date: tomorrow, completed: false }]);
+            if (!error) {
+                pushedIds.add(id);
+                btn.innerText = "Pushed";
+                btn.classList.add('btn-pushed');
+                fetchTasks();
             }
         }
 
         async function toggleTask(id, status) {
-            await client.from('tasks').update({ completed: !status }).eq('id', id); fetchAllData();
+            await client.from('tasks').update({ completed: !status }).eq('id', id); fetchTasks();
         }
 
         async function deleteTask(id) {
-            if(confirm('Delete this task?')) { await client.from('tasks').delete().eq('id', id); fetchAllData(); }
+            if(confirm('Delete this task?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); }
         }
 
         function switchTab(tab) {
             currentTab = tab;
-            // Ẩn tất cả view
-            document.getElementById('todo-view').classList.add('hidden');
-            document.getElementById('calendar-view').classList.add('hidden');
-            document.getElementById('achievements-view').classList.add('hidden');
-            
-            // Hiển thị view tương ứng
-            if (tab === 'calendar') {
-                document.getElementById('calendar-view').classList.remove('hidden');
-                document.getElementById('view-title').innerText = 'Log';
-            } else if (tab === 'achievements') {
-                document.getElementById('achievements-view').classList.remove('hidden');
-                document.getElementById('view-title').innerText = 'Achievements';
-            } else {
-                document.getElementById('todo-view').classList.remove('hidden');
-                document.getElementById('view-title').innerText = tab === 'today' ? 'Today' : 'Tomorrow';
-            }
-
-            // UI Sidebar
-            document.getElementById('circle-container').style.visibility = (tab === 'calendar' || tab === 'achievements') ? 'hidden' : 'visible';
+            document.getElementById('todo-view').classList.toggle('hidden', tab === 'calendar');
+            document.getElementById('calendar-view').classList.toggle('hidden', tab !== 'calendar');
+            document.getElementById('circle-container').style.visibility = tab === 'calendar' ? 'hidden' : 'visible';
+            document.getElementById('view-title').innerText = tab === 'calendar' ? 'Log' : (tab === 'today' ? 'Today' : 'Tomorrow');
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
             render();
         }
 
-        function toggleMonth(index) { activeMonthIndex = activeMonthIndex === index ? -1 : index; render(); }
-        function addNewMonth() { displayedMonths++; activeMonthIndex = displayedMonths - 1; render(); }
+        function toggleMonth(index) {
+            activeMonthIndex = activeMonthIndex === index ? -1 : index;
+            render();
+        }
+
+        function addNewMonth() {
+            displayedMonths++;
+            activeMonthIndex = displayedMonths - 1;
+            render();
+        }
+
         function toggleCompletedList() {
             showCompleted = !showCompleted;
             document.getElementById('completed-tasks').classList.toggle('hidden');
@@ -216,6 +187,7 @@
             const currentM = now.getMonth();
             const prevM = currentM - 1;
             const prevPrevM = currentM - 2;
+            
             const calculate = (mIndex) => {
                 if (mIndex < 0) return 0;
                 let score = 0;
@@ -226,27 +198,39 @@
                 });
                 return score;
             };
+
             const scoreLastMonth = calculate(prevM);
             const scorePrevPrevMonth = calculate(prevPrevM);
+            
             let growth = 0;
-            if (scorePrevPrevMonth > 0) growth = Math.round(((scoreLastMonth - scorePrevPrevMonth) / scorePrevPrevMonth) * 100);
+            if (scorePrevPrevMonth > 0) {
+                growth = Math.round(((scoreLastMonth - scorePrevPrevMonth) / scorePrevPrevMonth) * 100);
+            }
+
             return { lastMonth: scoreLastMonth, growth: growth };
         }
 
         function render() {
             const todayStr = getFormattedDate(0);
             
-            // Score Logic
             let totalScore = 0;
             const points = { 1: 4, 2: 3, 3: 2, 4: 1 };
             allTasks.forEach(t => {
                 if (t.completed) totalScore += points[t.priority];
                 else if (t.task_date < todayStr) totalScore -= points[t.priority];
             });
-            const stats = getMonthScoreStats();
-            document.getElementById('total-score').innerHTML = `${totalScore} <div class="text-[11px] font-medium text-gray-400 mt-2 tracking-normal">Last Month: <span class="text-gray-600">${stats.lastMonth}</span> <span class="${stats.growth >= 0 ? 'text-green-500' : 'text-red-400'} ml-1">(${stats.growth >= 0 ? '↑' : '↓'} ${Math.abs(stats.growth)}%)</span></div>`;
 
-            // Efficiency & Habits
+            const stats = getMonthScoreStats();
+            document.getElementById('total-score').innerHTML = `
+                ${totalScore}
+                <div class="text-[11px] font-medium text-gray-400 mt-2 tracking-normal">
+                    Last Month: <span class="text-gray-600">${stats.lastMonth}</span> 
+                    <span class="${stats.growth >= 0 ? 'text-green-500' : 'text-red-400'} ml-1">
+                        (${stats.growth >= 0 ? '↑' : '↓'} ${Math.abs(stats.growth)}%)
+                    </span>
+                </div>
+            `;
+
             const pTypes = [{ id: 1, label: 'High', color: 'bg-red-500', icon: '🔴' }, { id: 2, label: 'Medium', color: 'bg-orange-400', icon: '🟡' }, { id: 3, label: 'Low', color: 'bg-blue-400', icon: '🔵' }, { id: 4, label: 'None', color: 'bg-gray-300', icon: '⚪' }];
             document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
                 const pTasks = allTasks.filter(t => t.priority === p.id);
@@ -255,47 +239,72 @@
                 return `<div class="stats-card"><div class="flex justify-between text-[9px] font-semibold mb-1.5 uppercase text-gray-500"><span>${p.icon} ${p.label}</span><span>${pDone}/${pTasks.length}</span></div><div class="w-full bg-gray-200 h-1 rounded-full"><div class="${p.color} h-full transition-all duration-700" style="width:${pPercent}%"></div></div></div>`;
             }).join('');
 
-            const completedCounts = allTasks.filter(t => t.completed).reduce((acc, t) => { acc[t.text] = (acc[t.text] || 0) + 1; return acc; }, {});
-            let habitHtml = `<h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mt-8">Habit Counter</h4><div class="space-y-2 mt-3">`;
-            for (const [name, count] of Object.entries(completedCounts)) { habitHtml += `<div class="flex justify-between text-[11px] text-gray-500"><span>${name}</span><span class="font-bold text-[#5c67f2]">${count}x</span></div>`; }
-            document.getElementById('habit-counter-container').innerHTML = habitHtml + `</div>`;
+            const completedCounts = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                acc[t.text] = (acc[t.text] || 0) + 1;
+                return acc;
+            }, {});
 
-            // Task Mapper
+            let habitHtml = `<h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mt-8">Habit Counter</h4><div class="space-y-2 mt-3">`;
+            for (const [name, count] of Object.entries(completedCounts)) {
+                habitHtml += `<div class="flex justify-between text-[11px] text-gray-500"><span>${name}</span><span class="font-bold text-[#5c67f2]">${count}x</span></div>`;
+            }
+            habitHtml += `</div>`;
+            document.getElementById('habit-counter-container').innerHTML = habitHtml;
+
             const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
-            const taskMapper = t => `<div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition"><div class="flex items-center gap-3"><input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}"><span class="text-[13px] ${t.completed ? 'text-gray-300' : 'text-gray-700'}">${t.text}</span></div><button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 text-xs">✕</button></div>`;
+
+            const taskMapper = t => `
+                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
+                        <span class="text-[13px] ${t.completed ? 'text-gray-300' : 'text-gray-700'}">${t.text}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${t.completed ? `<button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">${pushedIds.has(t.id) ? 'Pushed' : 'Push'}</button>` : ''}
+                        <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
+                    </div>
+                </div>`;
             document.getElementById('active-tasks').innerHTML = active.map(taskMapper).join('');
             document.getElementById('completed-tasks').innerHTML = completed.map(taskMapper).join('');
             document.getElementById('completed-count').innerText = completed.length;
             document.getElementById('completed-container').style.display = completed.length ? 'block' : 'none';
 
-            // Calendar & Achievements Logic
             if (currentTab === 'calendar') {
                 const calList = document.getElementById('calendar-list');
-                const groups = allTasks.reduce((acc, t) => { if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 }; acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++; return acc; }, {});
+                const groups = allTasks.reduce((acc, t) => {
+                    if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 };
+                    acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++; return acc;
+                }, {});
+
                 let html = '';
                 for (let m = 0; m < displayedMonths; m++) {
+                    const daysInMonth = new Date(2026, m + 1, 0).getDate();
                     const isActive = activeMonthIndex === m;
-                    html += `<div class="month-container border-b border-gray-50 last:border-0"><div class="month-header" onclick="toggleMonth(${m})"><span class="text-sm font-medium text-gray-700">Tháng ${m + 1} 2026</span><span class="text-gray-400 text-[10px] transform ${isActive ? 'rotate-180' : ''}">▼</span></div><div class="month-content ${isActive ? 'active' : ''}"><div class="calendar-grid">`;
-                    for (let d = 1; d <= new Date(2026, m+1, 0).getDate(); d++) {
-                        const ds = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                        const data = groups[ds] || { total: 0, done: 0 };
-                        const pc = data.total ? Math.round((data.done/data.total)*100) : 0;
-                        let c = 'bg-gray-50 text-gray-300';
-                        if (data.total > 0) c = pc >= 80 ? 'bg-indigo-50 border-indigo-100 text-indigo-500' : (pc >= 50 ? 'bg-yellow-50 border-yellow-100 text-yellow-500' : 'bg-red-50 border-red-100 text-red-400');
-                        html += `<div class="day-box ${c}"><span class="day-num">${d}</span><span class="day-percent">${data.total ? pc+'%' : ''}</span></div>`;
+                    html += `
+                        <div class="month-container border-b border-gray-50 last:border-0">
+                            <div class="month-header" onclick="toggleMonth(${m})">
+                                <span class="text-sm font-medium text-gray-700">Tháng ${m + 1} 2026</span>
+                                <span class="text-gray-400 text-[10px] transform ${isActive ? 'rotate-180' : ''}">▼</span>
+                            </div>
+                            <div class="month-content ${isActive ? 'active' : ''}">
+                                <div class="calendar-grid">`;
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const dateStr = `2026-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const data = groups[dateStr] || { total: 0, done: 0 };
+                        const percent = data.total ? Math.round((data.done / data.total) * 100) : 0;
+                        let colorClass = 'bg-gray-50 text-gray-300';
+                        if (data.total > 0) {
+                            if (percent >= 80) colorClass = 'bg-indigo-50 border-indigo-100 text-indigo-500';
+                            else if (percent >= 50) colorClass = 'bg-yellow-50 border-yellow-100 text-yellow-500';
+                            else colorClass = 'bg-red-50 border-red-100 text-red-400';
+                        }
+                        html += `<div class="day-box ${colorClass}"><span class="day-num">${d}</span><span class="day-percent">${data.total ? percent + '%' : ''}</span></div>`;
                     }
                     html += `</div></div></div>`;
                 }
                 calList.innerHTML = html;
-            } else if (currentTab === 'achievements') {
-                document.getElementById('achievements-list').innerHTML = achievements.map(ach => `
-                    <div class="group flex items-start justify-between border-l-2 border-indigo-100 pl-4 py-1">
-                        <div><p class="text-[10px] font-bold text-indigo-400 uppercase tracking-tight">${new Date(ach.date).toLocaleDateString('vi-VN')}</p>
-                        <p class="text-sm text-gray-700 font-medium">${ach.content}</p></div>
-                        <button onclick="deleteAchievement(${ach.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 text-[10px] transition">✕</button>
-                    </div>`).join('');
             }
 
             const percent = viewTasks.length ? Math.round((completed.length / viewTasks.length) * 100) : 0;
@@ -304,7 +313,7 @@
             document.getElementById('stats-text').innerText = `${viewTasks.length} tasks`;
         }
 
-        window.onload = fetchAllData;
+        window.onload = fetchTasks;
     </script>
 </body>
 </html>
