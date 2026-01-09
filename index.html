@@ -34,6 +34,28 @@
         .stats-card { background: #fafafa; border-radius: 8px; padding: 10px; border: 1px solid #f0f0f0; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
+        /* Nút Push vuông bo tròn */
+.btn-push {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.btn-push:hover {
+    border-color: #5c67f2;
+    color: #5c67f2;
+}
+/* Trạng thái sau khi đã bấm */
+.btn-pushed {
+    background: #5c67f2 !important;
+    color: white !important;
+    border-color: #5c67f2 !important;
+}
     </style>
 </head>
 <body class="flex h-screen">
@@ -121,7 +143,26 @@
         const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
         const client = supabase.createClient(SB_URL, SB_KEY);
+let pushedIds = new Set(); // Theo dõi các task đã được push trong phiên làm việc
 
+async function pushTask(btn, id, text, priority) {
+    const d = new Date(); 
+    d.setDate(d.getDate() + 1);
+    const tomorrow = d.toISOString().split('T')[0];
+    
+    // Tạo bản sao mới cho ngày mai
+    const { error } = await client.from('tasks').insert([
+        { text: text, priority: priority, task_date: tomorrow, completed: false }
+    ]);
+    
+    if (!error) {
+        pushedIds.add(id); // Đánh dấu task này đã được đẩy đi
+        btn.innerText = "Pushed";
+        btn.classList.add('btn-pushed');
+        // Tải lại dữ liệu để cập nhật danh sách ngày mai
+        fetchTasks(); 
+    }
+}
         let allTasks = [];
         let currentTab = 'today';
         let showCompleted = true;
@@ -204,7 +245,33 @@
             const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
+// Task chưa hoàn thành (Giữ nguyên)
+activeEl.innerHTML = active.map(t => `
+    <div class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50 last:border-0">
+        <div class="flex items-center gap-3">
+            <input type="checkbox" onchange="toggleTask(${t.id}, false)" class="cb-custom cb-p${t.priority}">
+            <span class="text-sm text-gray-700 font-medium">${t.text}</span>
+        </div>
+        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 px-2">✕</button>
+    </div>
+`).join('');
 
+// Task đã hoàn thành (Thêm nút Push luôn hiển thị)
+completedEl.innerHTML = completed.map(t => `
+    <div class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50 last:border-0">
+        <div class="flex items-center gap-3">
+            <input type="checkbox" checked onchange="toggleTask(${t.id}, true)" class="cb-custom cb-p${t.priority}">
+            <span class="text-sm text-gray-300 line-through font-medium">${t.text}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' 
+                    class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">
+                ${pushedIds.has(t.id) ? 'Pushed' : 'Push'}
+            </button>
+            <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 px-2">✕</button>
+        </div>
+    </div>
+`).join('');
             const taskMapper = t => `
                 <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
                     <div class="flex items-center gap-3">
