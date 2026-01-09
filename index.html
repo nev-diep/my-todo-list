@@ -232,7 +232,7 @@
                 <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
                     <div class="flex items-center gap-3">
                         <input type="checkbox" checked onchange="toggleTask(${t.id}, true)" class="cb-custom cb-p${t.priority}">
-                        <span class="text-[13px] text-gray-300 line-through">${t.text}</span>
+                        <span class="text-[13px] text-gray-300">${t.text}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' 
