@@ -10,43 +10,41 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #fff; color: #333; overflow: hidden; }
         .sidebar-item.active { background-color: #f5f5f5; color: #5c67f2; font-weight: 500; }
-        
         .input-container { background-color: #f4f4f4; border: 1px solid transparent; transition: all 0.2s ease; }
         .input-container:focus-within { background-color: #fff !important; border-color: #5c67f2; box-shadow: 0 0 0 2px rgba(92,103,242,0.1); }
-
         .cb-custom { appearance: none; width: 18px; height: 18px; border-radius: 4px; border: 1px solid; cursor: pointer; position: relative; background: white; }
         .cb-p1 { border-color: #ff4d4f; } .cb-p2 { border-color: #faad14; } .cb-p3 { border-color: #1890ff; } .cb-p4 { border-color: #d1d1d1; }
         .cb-custom:checked { background-color: #d1d1d1 !important; border-color: #d1d1d1 !important; }
         .cb-custom:checked::after { content: '✓'; color: white; font-size: 11px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-
-        /* Calendar Accordion Styling */
-        .month-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; transition: background 0.2s; }
-        .month-header:hover { background: #f0f0f0; }
+        .month-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; }
         .month-content { display: none; margin-bottom: 20px; padding: 10px 0; }
         .month-content.active { display: block; }
-        
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-box { aspect-ratio: 1/1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #f0f0f0; background: #fafafa; }
         .day-num { font-size: 14px; font-weight: 500; }
         .day-percent { font-size: 8px; font-weight: 400; opacity: 0.7; }
-        
-        #progress-circle { stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+        #progress-circle { stroke-linecap: round; transition: stroke-dashoffset 125.6 ease; }
         .stats-card { background: #fafafa; border-radius: 8px; padding: 10px; border: 1px solid #f0f0f0; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
+        /* Style cho nút Push */
+        .push-btn { color: #9ca3af; opacity: 0; transition: all 0.2s; cursor: pointer; }
+        .group:hover .push-btn { opacity: 1; }
+        .push-btn:hover { color: #5c67f2; transform: scale(1.1); }
     </style>
 </head>
 <body class="flex h-screen">
 
     <aside class="w-60 bg-[#fafafa] border-r border-gray-100 flex flex-col pt-8 shrink-0">
         <div class="px-6 mb-8 flex items-center gap-2">
-            <div class="w-6 h-6 bg-[#5c67f2] rounded flex items-center justify-center text-white text-xs">✓</div>
-            <span class="font-semibold text-gray-700 text-sm tracking-tight uppercase">MY TASKS</span>
+            <div class="w-6 h-6 bg-[#5c67f2] rounded flex items-center justify-center text-white text-xs font-bold">✓</div>
+            <span class="font-semibold text-gray-700 text-sm tracking-tight uppercase">Task Management</span>
         </div>
         <nav class="px-3 space-y-1">
-            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm"><span>📅</span> Today</button>
-            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>📅</span> Tomorrow</button>
-            <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100"><span>🗓️</span> Calendar</button>
+            <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500">📅 Today</button>
+            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">🌅 Tomorrow</button>
+            <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">🗓️ Calendar</button>
+            <button onclick="switchTab('achievements')" id="tab-achievements" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">🏆 Achievements</button>
         </nav>
     </aside>
 
@@ -54,66 +52,71 @@
         <header class="mb-6 flex justify-between items-center max-w-3xl mx-auto">
             <div>
                 <h2 id="view-title" class="text-2xl font-semibold text-gray-800 tracking-tight">Today</h2>
-                <p id="stats-text" class="text-xs text-gray-400">0 tasks pending</p>
+                <p id="stats-text" class="text-xs text-gray-400">0 tasks recorded</p>
             </div>
             <div id="circle-container" class="relative w-12 h-12 flex items-center justify-center">
                 <svg class="w-full h-full transform -rotate-90">
                     <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="transparent" class="text-gray-100" />
-                    <circle id="progress-circle" cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="transparent" 
-                        stroke-dasharray="125.6" stroke-dashoffset="125.6" class="text-[#5c67f2]" />
+                    <circle id="progress-circle" cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="text-[#5c67f2]" />
                 </svg>
                 <span id="progress-percent" class="absolute text-[10px] font-medium text-gray-700">0%</span>
             </div>
         </header>
 
         <div id="todo-view" class="max-w-2xl mx-auto">
-            <div class="input-container mb-6 rounded-xl p-1.5 flex items-center">
+            <div class="input-container mb-6 rounded-xl p-1.5 flex items-center shadow-sm">
                 <span class="px-3 text-gray-400 text-xl font-light">+</span>
                 <input type="text" id="task-input" placeholder="Add task" class="flex-1 bg-transparent py-1 outline-none text-sm font-normal text-gray-700">
                 <div class="flex items-center gap-2 pr-2">
                     <select id="priority-input" class="bg-transparent text-xs outline-none cursor-pointer font-medium text-gray-400">
-                        <option value="4">⚪ None</option>
-                        <option value="1">🔴 High</option>
-                        <option value="2">🟡 Medium</option>
-                        <option value="3">🔵 Low</option>
+                        <option value="4">⚪ None</option><option value="1">🔴 High</option><option value="2">🟡 Medium</option><option value="3">🔵 Low</option>
                     </select>
                     <button onclick="addTask()" class="bg-[#5c67f2] text-white text-[11px] font-medium px-4 py-1.5 rounded-lg hover:bg-indigo-600 transition">ADD</button>
                 </div>
             </div>
             <div id="active-tasks" class="space-y-1"></div>
-<div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
-    <div class="flex items-center gap-2 text-gray-400 cursor-pointer" onclick="toggleCompletedList()">
-        <span id="chevron-svg" class="transition-transform duration-200 rotate-90 w-4 h-4 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
-                <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-        </span> 
-        <span class="text-[14px] font-medium">Completed</span>
-        <span id="completed-count" class="text-[12px] font-normal ml-0.5">0</span>
-    </div>
-    <div id="completed-tasks" class="space-y-1 mt-3"></div>
-</div>
-                <div id="completed-tasks" class="space-y-1 opacity-50"></div>
+            <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
+                <div class="flex items-center gap-2 text-gray-400 cursor-pointer" onclick="toggleCompletedList()">
+                    <span id="chevron-svg" class="transition-transform duration-200 rotate-90 w-4 h-4 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </span> 
+                    <span class="text-[14px] font-medium">Completed</span>
+                    <span id="completed-count" class="text-[12px] font-normal ml-0.5">0</span>
+                </div>
+                <div id="completed-tasks" class="space-y-1 mt-3"></div>
             </div>
         </div>
 
         <div id="calendar-view" class="hidden max-w-2xl mx-auto pb-20">
             <div id="calendar-list"></div>
-            <button onclick="addNewMonth()" class="w-full py-3 mt-4 border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 font-medium hover:border-[#5c67f2] hover:text-[#5c67f2] transition-all">
-                + Add Next Month
-            </button>
+            <button onclick="addNewMonth()" class="w-full py-3 mt-4 border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 font-medium hover:border-[#5c67f2] hover:text-[#5c67f2] transition-all">+ Add Next Month</button>
+        </div>
+
+        <div id="achievements-view" class="hidden max-w-2xl mx-auto">
+            <div class="input-container mb-6 rounded-xl p-1.5 flex items-center shadow-sm">
+                <span class="px-3 text-gray-400 text-xl font-light">🏆</span>
+                <input type="text" id="achievement-input" placeholder="Nhập thành tựu mới..." class="flex-1 bg-transparent py-1 outline-none text-sm font-normal text-gray-700">
+                <button onclick="addAchievement()" class="bg-[#5c67f2] text-white text-[11px] font-medium px-4 py-1.5 rounded-lg mr-2">SAVE</button>
+            </div>
+            <div id="achievement-list" class="space-y-3"></div>
         </div>
     </main>
 
-    <aside class="w-72 bg-[#fafafa] border-l border-gray-100 p-8 flex flex-col shrink-0">
-        <div class="text-center mb-12">
+    <aside class="w-72 bg-[#fafafa] border-l border-gray-100 p-8 flex flex-col shrink-0 overflow-y-auto">
+        <div class="text-center mb-8">
             <p class="text-[10px] uppercase tracking-widest text-gray-400 font-medium mb-2">Lifetime Score</p>
-            <h1 id="total-score" class="text-5xl font-light text-[#5c67f2] tracking-tighter">0</h1>
+            <h1 id="total-score-val" class="text-5xl font-light text-[#5c67f2] tracking-tighter">0</h1>
+            <div id="month-comparison" class="mt-2 text-[11px]"></div>
         </div>
-
-        <div class="flex-1 space-y-5">
-            <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Task Efficiency</h4>
-            <div id="priority-stats" class="space-y-3"></div>
+        <div class="flex-1 space-y-6">
+            <div>
+                <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Task Efficiency</h4>
+                <div id="priority-stats" class="space-y-3 mt-3"></div>
+            </div>
+            <div>
+                <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Habit Counter</h4>
+                <div id="habit-counter" class="space-y-2 mt-3"></div>
+            </div>
         </div>
     </aside>
 
@@ -123,10 +126,11 @@
         const client = supabase.createClient(SB_URL, SB_KEY);
 
         let allTasks = [];
+        let allAchievements = [];
         let currentTab = 'today';
         let showCompleted = true;
         let displayedMonths = 1;
-        let activeMonthIndex = 0; // Theo dõi tháng nào đang được mở
+        let activeMonthIndex = 0;
 
         const getFormattedDate = (offset = 0) => {
             const d = new Date(); d.setDate(d.getDate() + offset);
@@ -134,8 +138,11 @@
         };
 
         async function fetchTasks() {
-            const { data, error } = await client.from('tasks').select('*').order('priority', { ascending: true });
-            if (!error) { allTasks = data || []; render(); }
+            const { data: tData } = await client.from('tasks').select('*').order('priority', { ascending: true });
+            const { data: aData } = await client.from('achievements').select('*').order('created_at', { ascending: false });
+            allTasks = tData || [];
+            allAchievements = aData || [];
+            render();
         }
 
         async function addTask() {
@@ -146,36 +153,48 @@
             input.value = ''; fetchTasks();
         }
 
+        // Logic Mới: Copy task sang ngày mai, giữ nguyên task cũ
+        async function copyToTomorrow(task) {
+            const tomorrowStr = getFormattedDate(1);
+            await client.from('tasks').insert([{ 
+                text: task.text, 
+                priority: task.priority, 
+                task_date: tomorrowStr,
+                completed: false 
+            }]);
+            alert('Đã sao chép task sang ngày mai!');
+            fetchTasks();
+        }
+
         async function toggleTask(id, status) {
             await client.from('tasks').update({ completed: !status }).eq('id', id); fetchTasks();
         }
 
         async function deleteTask(id) {
-            if(confirm('Delete this task?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); }
+            if(confirm('Delete task?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); }
+        }
+
+        async function addAchievement() {
+            const input = document.getElementById('achievement-input');
+            if (!input.value) return;
+            await client.from('achievements').insert([{ title: input.value }]);
+            input.value = ''; fetchTasks();
         }
 
         function switchTab(tab) {
             currentTab = tab;
-            document.getElementById('todo-view').classList.toggle('hidden', tab === 'calendar');
+            document.getElementById('todo-view').classList.toggle('hidden', tab !== 'today' && tab !== 'tomorrow');
             document.getElementById('calendar-view').classList.toggle('hidden', tab !== 'calendar');
-            document.getElementById('circle-container').style.visibility = tab === 'calendar' ? 'hidden' : 'visible';
-            document.getElementById('view-title').innerText = tab === 'calendar' ? 'Log' : (tab === 'today' ? 'Today' : 'Tomorrow');
+            document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
+            document.getElementById('circle-container').style.visibility = (tab === 'today' || tab === 'tomorrow') ? 'visible' : 'hidden';
+            document.getElementById('view-title').innerText = tab.charAt(0).toUpperCase() + tab.slice(1);
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
             render();
         }
 
-        function toggleMonth(index) {
-            activeMonthIndex = activeMonthIndex === index ? -1 : index;
-            render();
-        }
-
-        function addNewMonth() {
-            displayedMonths++;
-            activeMonthIndex = displayedMonths - 1; // Tự động mở tháng mới thêm
-            render();
-        }
-
+        function toggleMonth(i) { activeMonthIndex = activeMonthIndex === i ? -1 : i; render(); }
+        function addNewMonth() { displayedMonths++; activeMonthIndex = displayedMonths - 1; render(); }
         function toggleCompletedList() {
             showCompleted = !showCompleted;
             document.getElementById('completed-tasks').classList.toggle('hidden');
@@ -184,91 +203,111 @@
 
         function render() {
             const todayStr = getFormattedDate(0);
+            const pts = { 1: 4, 2: 3, 3: 2, 4: 1 };
             
             let totalScore = 0;
-            const points = { 1: 4, 2: 3, 3: 2, 4: 1 };
+            let mScores = [0, 0, 0]; 
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
             allTasks.forEach(t => {
-                if (t.completed) totalScore += points[t.priority];
-                else if (t.task_date < todayStr) totalScore -= points[t.priority];
+                const val = pts[t.priority] || 0;
+                if (t.completed) totalScore += val; else if (t.task_date < todayStr) totalScore -= val;
+                
+                const d = new Date(t.task_date);
+                const mDiff = (currentYear - d.getFullYear()) * 12 + (currentMonth - d.getMonth());
+                if (t.completed && mDiff >= 0 && mDiff <= 2) mScores[mDiff] += val;
             });
-            document.getElementById('total-score').innerText = totalScore;
 
-            const pTypes = [{ id: 1, label: 'High', color: 'bg-red-500', icon: '🔴' }, { id: 2, label: 'Medium', color: 'bg-orange-400', icon: '🟡' }, { id: 3, label: 'Low', color: 'bg-blue-400', icon: '🔵' }, { id: 4, label: 'None', color: 'bg-gray-300', icon: '⚪' }];
-            document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
-                const pTasks = allTasks.filter(t => t.priority === p.id);
-                const pDone = pTasks.filter(t => t.completed).length;
-                const pPercent = pTasks.length ? Math.round((pDone / pTasks.length) * 100) : 0;
-                return `<div class="stats-card"><div class="flex justify-between text-[9px] font-semibold mb-1.5 uppercase text-gray-500"><span>${p.icon} ${p.label}</span><span>${pDone}/${pTasks.length}</span></div><div class="w-full bg-gray-200 h-1 rounded-full"><div class="${p.color} h-full transition-all duration-700" style="width:${pPercent}%"></div></div></div>`;
-            }).join('');
+            document.getElementById('total-score-val').innerText = totalScore;
+            const growth = mScores[2] > 0 ? Math.round(((mScores[1] - mScores[2]) / mScores[2]) * 100) : 0;
+            document.getElementById('month-comparison').innerHTML = `Last Month: <span class="text-gray-600 font-semibold">${mScores[1]}</span> <span class="${growth >= 0 ? 'text-green-500' : 'text-red-400'}">(${growth >= 0 ? '↑' : '↓'} ${Math.abs(growth)}%)</span>`;
 
+            // Habit Counter
+            const counts = allTasks.filter(t => t.completed).reduce((acc, t) => { acc[t.text] = (acc[t.text] || 0) + 1; return acc; }, {});
+            document.getElementById('habit-counter').innerHTML = Object.entries(counts).map(([name, count]) => `
+                <div class="flex justify-between text-[11px] text-gray-500"><span>${name}</span><span class="font-bold text-[#5c67f2]">${count}x</span></div>`).join('');
+
+            // Task Rendering
             const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
 
-            const taskMapper = t => `
+            // Active Tasks Mapper (Không có nút Push)
+            const activeMapper = t => `
                 <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
                     <div class="flex items-center gap-3">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
-                        <span class="text-[13px] ${t.completed ? 'text-gray-300' : 'text-gray-700'}">${t.text}</span>
+                        <input type="checkbox" onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
+                        <span class="text-[13px] text-gray-700">${t.text}</span>
                     </div>
-                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
+                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 text-xs">✕</button>
                 </div>`;
-            document.getElementById('active-tasks').innerHTML = active.map(taskMapper).join('');
-            document.getElementById('completed-tasks').innerHTML = completed.map(taskMapper).join('');
+
+            // Completed Tasks Mapper (CÓ nút Push để sao chép)
+            const completedMapper = t => `
+                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" checked onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
+                        <span class="text-[13px] text-gray-300">${t.text}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick='copyToTomorrow(${JSON.stringify(t).replace(/'/g, "&apos;")})' class="push-btn" title="Copy to tomorrow">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                        </button>
+                        <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 text-xs px-1">✕</button>
+                    </div>
+                </div>`;
+
+            document.getElementById('active-tasks').innerHTML = active.map(activeMapper).join('');
+            document.getElementById('completed-tasks').innerHTML = completed.map(completedMapper).join('');
             document.getElementById('completed-count').innerText = completed.length;
             document.getElementById('completed-container').style.display = completed.length ? 'block' : 'none';
 
+            // Achievements Render
+            document.getElementById('achievement-list').innerHTML = allAchievements.map(a => `
+                <div class="flex items-center gap-3 p-4 bg-yellow-50/50 border border-yellow-100 rounded-xl">
+                    <span class="text-xl text-yellow-500">🏆</span>
+                    <span class="text-sm font-medium text-gray-700">${a.title}</span>
+                </div>`).join('');
+
+            // Priority Stats
+            const pTypes = [{ id: 1, label: 'High', color: 'bg-red-500' }, { id: 2, label: 'Medium', color: 'bg-orange-400' }, { id: 3, label: 'Low', color: 'bg-blue-400' }, { id: 4, label: 'None', color: 'bg-gray-300' }];
+            document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
+                const pTasks = allTasks.filter(t => t.priority === p.id);
+                const pDone = pTasks.filter(t => t.completed).length;
+                const pPerc = pTasks.length ? Math.round((pDone / pTasks.length) * 100) : 0;
+                return `<div class="stats-card"><div class="flex justify-between text-[9px] font-semibold mb-1.5 uppercase text-gray-400"><span>${p.label}</span><span>${pDone}/${pTasks.length}</span></div><div class="w-full bg-gray-200 h-1 rounded-full"><div class="${p.color} h-full transition-all" style="width:${pPerc}%"></div></div></div>`;
+            }).join('');
+
+            // Calendar Logic
             if (currentTab === 'calendar') {
-                const calList = document.getElementById('calendar-list');
                 const groups = allTasks.reduce((acc, t) => {
                     if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 };
                     acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++; return acc;
                 }, {});
-
                 let html = '';
                 for (let m = 0; m < displayedMonths; m++) {
-                    const monthDate = new Date(2026, m, 1);
-                    const monthName = monthDate.toLocaleString('default', { month: 'long' });
-                    const daysInMonth = new Date(2026, m + 1, 0).getDate();
                     const isActive = activeMonthIndex === m;
-
-                    html += `
-                        <div class="month-container border-b border-gray-50 last:border-0">
-                            <div class="month-header" onclick="toggleMonth(${m})">
-                                <span class="text-sm font-medium text-gray-700">Tháng ${m + 1} 2026</span>
-                                <span class="text-gray-400 text-[10px] transform ${isActive ? 'rotate-180' : ''}">▼</span>
-                            </div>
-                            <div class="month-content ${isActive ? 'active' : ''}">
-                                <div class="calendar-grid">`;
-                    
-                    for (let d = 1; d <= daysInMonth; d++) {
-                        const dateStr = `2026-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                        const data = groups[dateStr] || { total: 0, done: 0 };
-                        const percent = data.total ? Math.round((data.done / data.total) * 100) : 0;
-                        
-                        let colorClass = 'bg-gray-50 text-gray-300';
-                        if (data.total > 0) {
-                            if (percent >= 80) colorClass = 'bg-indigo-50 border-indigo-100 text-indigo-500';
-                            else if (percent >= 50) colorClass = 'bg-yellow-50 border-yellow-100 text-yellow-500';
-                            else colorClass = 'bg-red-50 border-red-100 text-red-400';
-                        }
-
-                        html += `<div class="day-box ${colorClass}">
-                            <span class="day-num">${d}</span>
-                            <span class="day-percent">${data.total ? percent + '%' : ''}</span>
-                        </div>`;
+                    html += `<div class="month-container border-b border-gray-50"><div class="month-header" onclick="toggleMonth(${m})"><span class="text-sm font-medium">Tháng ${m+1} - 2026</span><span class="text-[10px] transform ${isActive?'rotate-180':''}">▼</span></div><div class="month-content ${isActive?'active':''}"><div class="calendar-grid">`;
+                    for (let d = 1; d <= new Date(2026, m+1, 0).getDate(); d++) {
+                        const ds = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                        const data = groups[ds] || {total:0, done:0};
+                        const p = data.total ? Math.round(data.done/data.total*100) : 0;
+                        let c = 'bg-gray-50 text-gray-300';
+                        if(data.total>0) c = p>=80?'bg-indigo-50 text-indigo-500':p>=50?'bg-yellow-50 text-yellow-500':'bg-red-50 text-red-400';
+                        html += `<div class="day-box ${c}"><span class="day-num">${d}</span><span class="day-percent">${data.total?p+'%':''}</span></div>`;
                     }
                     html += `</div></div></div>`;
                 }
-                calList.innerHTML = html;
+                document.getElementById('calendar-list').innerHTML = html;
             }
 
-            const percent = viewTasks.length ? Math.round((completed.length / viewTasks.length) * 100) : 0;
-            document.getElementById('progress-percent').innerText = percent + '%';
-            document.getElementById('progress-circle').style.strokeDashoffset = 125.6 - (percent / 100) * 125.6;
-            document.getElementById('stats-text').innerText = `${viewTasks.length} tasks`;
+            const perc = viewTasks.length ? Math.round((completed.length/viewTasks.length)*100) : 0;
+            document.getElementById('progress-percent').innerText = perc+'%';
+            document.getElementById('progress-circle').style.strokeDashoffset = 125.6-(perc/100)*125.6;
+            document.getElementById('stats-text').innerText = `${viewTasks.length} tasks recorded`;
         }
-
         window.onload = fetchTasks;
     </script>
 </body>
