@@ -16,6 +16,12 @@
         .cb-p1 { border-color: #ff4d4f; } .cb-p2 { border-color: #faad14; } .cb-p3 { border-color: #1890ff; } .cb-p4 { border-color: #d1d1d1; }
         .cb-custom:checked { background-color: #d1d1d1 !important; border-color: #d1d1d1 !important; }
         .cb-custom:checked::after { content: '✓'; color: white; font-size: 11px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        
+        /* Button Push Custom */
+        .btn-push { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px; transition: all 0.2s; border: 1px solid #e5e7eb; background: white; color: #6b7280; }
+        .btn-push:hover { border-color: #5c67f2; color: #5c67f2; }
+        .btn-pushed { background: #5c67f2 !important; color: white !important; border-color: #5c67f2 !important; }
+
         .month-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; }
         .month-content { display: none; margin-bottom: 20px; padding: 10px 0; }
         .month-content.active { display: block; }
@@ -23,14 +29,10 @@
         .day-box { aspect-ratio: 1/1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #f0f0f0; background: #fafafa; }
         .day-num { font-size: 14px; font-weight: 500; }
         .day-percent { font-size: 8px; font-weight: 400; opacity: 0.7; }
-        #progress-circle { stroke-linecap: round; transition: stroke-dashoffset 125.6 ease; }
+        #progress-circle { stroke-linecap: round; transition: stroke-dashoffset 125.6s ease; }
         .stats-card { background: #fafafa; border-radius: 8px; padding: 10px; border: 1px solid #f0f0f0; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
-        /* Style cho nút Push */
-        .push-btn { color: #9ca3af; opacity: 0; transition: all 0.2s; cursor: pointer; }
-        .group:hover .push-btn { opacity: 1; }
-        .push-btn:hover { color: #5c67f2; transform: scale(1.1); }
     </style>
 </head>
 <body class="flex h-screen">
@@ -38,12 +40,12 @@
     <aside class="w-60 bg-[#fafafa] border-r border-gray-100 flex flex-col pt-8 shrink-0">
         <div class="px-6 mb-8 flex items-center gap-2">
             <div class="w-6 h-6 bg-[#5c67f2] rounded flex items-center justify-center text-white text-xs font-bold">✓</div>
-            <span class="font-semibold text-gray-700 text-sm tracking-tight uppercase">Task Management</span>
+            <span class="font-semibold text-gray-700 text-sm tracking-tight uppercase">ĐIỆP'S TASK</span>
         </div>
         <nav class="px-3 space-y-1">
             <button onclick="switchTab('today')" id="tab-today" class="sidebar-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500">📅 Today</button>
-            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">🌅 Tomorrow</button>
-            <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">🗓️ Calendar</button>
+            <button onclick="switchTab('tomorrow')" id="tab-tomorrow" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">📅 Tomorrow</button>
+            <button onclick="switchTab('calendar')" id="tab-calendar" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">📅 Calendar</button>
             <button onclick="switchTab('achievements')" id="tab-achievements" class="sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-500 hover:bg-gray-100">🏆 Achievements</button>
         </nav>
     </aside>
@@ -78,7 +80,7 @@
             <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
                 <div class="flex items-center gap-2 text-gray-400 cursor-pointer" onclick="toggleCompletedList()">
                     <span id="chevron-svg" class="transition-transform duration-200 rotate-90 w-4 h-4 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </span> 
                     <span class="text-[14px] font-medium">Completed</span>
                     <span id="completed-count" class="text-[12px] font-normal ml-0.5">0</span>
@@ -93,10 +95,15 @@
         </div>
 
         <div id="achievements-view" class="hidden max-w-2xl mx-auto">
-            <div class="input-container mb-6 rounded-xl p-1.5 flex items-center shadow-sm">
-                <span class="px-3 text-gray-400 text-xl font-light">🏆</span>
-                <input type="text" id="achievement-input" placeholder="Nhập thành tựu mới..." class="flex-1 bg-transparent py-1 outline-none text-sm font-normal text-gray-700">
-                <button onclick="addAchievement()" class="bg-[#5c67f2] text-white text-[11px] font-medium px-4 py-1.5 rounded-lg mr-2">SAVE</button>
+            <div class="input-container mb-6 rounded-xl p-2 flex flex-col gap-2 shadow-sm">
+                <div class="flex items-center">
+                    <span class="px-3 text-gray-400 text-xl">🏆</span>
+                    <input type="text" id="achievement-input" placeholder="Tên thành tựu..." class="flex-1 bg-transparent py-1 outline-none text-sm font-normal text-gray-700">
+                </div>
+                <div class="flex justify-between items-center px-2 pt-1 border-t border-gray-100">
+                    <input type="date" id="achievement-date" class="bg-transparent text-xs text-gray-500 outline-none">
+                    <button onclick="addAchievement()" class="bg-[#5c67f2] text-white text-[11px] font-medium px-6 py-1.5 rounded-lg">SAVE ACHIEVEMENT</button>
+                </div>
             </div>
             <div id="achievement-list" class="space-y-3"></div>
         </div>
@@ -128,9 +135,7 @@
         let allTasks = [];
         let allAchievements = [];
         let currentTab = 'today';
-        let showCompleted = true;
-        let displayedMonths = 1;
-        let activeMonthIndex = 0;
+        let pushedIds = new Set(); // Theo dõi các task đã bấm push trong phiên làm việc
 
         const getFormattedDate = (offset = 0) => {
             const d = new Date(); d.setDate(d.getDate() + offset);
@@ -139,9 +144,10 @@
 
         async function fetchTasks() {
             const { data: tData } = await client.from('tasks').select('*').order('priority', { ascending: true });
-            const { data: aData } = await client.from('achievements').select('*').order('created_at', { ascending: false });
+            const { data: aData } = await client.from('achievements').select('*');
             allTasks = tData || [];
-            allAchievements = aData || [];
+            // Sắp xếp thành tựu theo ngày mới nhất
+            allAchievements = (aData || []).sort((a, b) => new Date(b.achieve_date) - new Date(a.achieve_date));
             render();
         }
 
@@ -153,17 +159,15 @@
             input.value = ''; fetchTasks();
         }
 
-        // Logic Mới: Copy task sang ngày mai, giữ nguyên task cũ
-        async function copyToTomorrow(task) {
+        async function pushTask(btn, task) {
             const tomorrowStr = getFormattedDate(1);
-            await client.from('tasks').insert([{ 
-                text: task.text, 
-                priority: task.priority, 
-                task_date: tomorrowStr,
-                completed: false 
-            }]);
-            alert('Đã sao chép task sang ngày mai!');
-            fetchTasks();
+            const { error } = await client.from('tasks').insert([{ text: task.text, priority: task.priority, task_date: tomorrowStr, completed: false }]);
+            if(!error) {
+                pushedIds.add(task.id);
+                btn.innerText = "Pushed";
+                btn.classList.add('btn-pushed');
+                fetchTasks();
+            }
         }
 
         async function toggleTask(id, status) {
@@ -175,10 +179,12 @@
         }
 
         async function addAchievement() {
-            const input = document.getElementById('achievement-input');
-            if (!input.value) return;
-            await client.from('achievements').insert([{ title: input.value }]);
-            input.value = ''; fetchTasks();
+            const title = document.getElementById('achievement-input').value;
+            const date = document.getElementById('achievement-date').value;
+            if (!title || !date) return alert("Vui lòng nhập đầy đủ tên và ngày!");
+            await client.from('achievements').insert([{ title, achieve_date: date }]);
+            document.getElementById('achievement-input').value = '';
+            fetchTasks();
         }
 
         function switchTab(tab) {
@@ -193,30 +199,23 @@
             render();
         }
 
-        function toggleMonth(i) { activeMonthIndex = activeMonthIndex === i ? -1 : i; render(); }
-        function addNewMonth() { displayedMonths++; activeMonthIndex = displayedMonths - 1; render(); }
         function toggleCompletedList() {
-            showCompleted = !showCompleted;
             document.getElementById('completed-tasks').classList.toggle('hidden');
-            document.getElementById('chevron-svg').style.transform = showCompleted ? 'rotate(90deg)' : 'rotate(0deg)';
         }
 
         function render() {
             const todayStr = getFormattedDate(0);
             const pts = { 1: 4, 2: 3, 3: 2, 4: 1 };
             
+            // Score & Months
             let totalScore = 0;
-            let mScores = [0, 0, 0]; 
+            let mScores = [0, 0, 0];
             const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-
             allTasks.forEach(t => {
                 const val = pts[t.priority] || 0;
                 if (t.completed) totalScore += val; else if (t.task_date < todayStr) totalScore -= val;
-                
                 const d = new Date(t.task_date);
-                const mDiff = (currentYear - d.getFullYear()) * 12 + (currentMonth - d.getMonth());
+                const mDiff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
                 if (t.completed && mDiff >= 0 && mDiff <= 2) mScores[mDiff] += val;
             });
 
@@ -227,35 +226,31 @@
             // Habit Counter
             const counts = allTasks.filter(t => t.completed).reduce((acc, t) => { acc[t.text] = (acc[t.text] || 0) + 1; return acc; }, {});
             document.getElementById('habit-counter').innerHTML = Object.entries(counts).map(([name, count]) => `
-                <div class="flex justify-between text-[11px] text-gray-500"><span>${name}</span><span class="font-bold text-[#5c67f2]">${count}x</span></div>`).join('');
+                <div class="flex justify-between text-[11px] text-gray-500"><span>${name}</span><span class="font-bold text-[#5c67f2]">${count}</span></div>`).join('');
 
-            // Task Rendering
+            // Tasks Rendering
             const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
 
-            // Active Tasks Mapper (Không có nút Push)
             const activeMapper = t => `
-                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
+                <div class="flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg">
                     <div class="flex items-center gap-3">
                         <input type="checkbox" onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
                         <span class="text-[13px] text-gray-700">${t.text}</span>
                     </div>
-                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 text-xs">✕</button>
+                    <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 text-xs px-2">✕</button>
                 </div>`;
 
-            // Completed Tasks Mapper (CÓ nút Push để sao chép)
             const completedMapper = t => `
-                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
+                <div class="flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg">
                     <div class="flex items-center gap-3">
                         <input type="checkbox" checked onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
                         <span class="text-[13px] text-gray-300">${t.text}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick='copyToTomorrow(${JSON.stringify(t).replace(/'/g, "&apos;")})' class="push-btn" title="Copy to tomorrow">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
-                        </button>
-                        <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 text-xs px-1">✕</button>
+                        <button onclick='pushTask(this, ${JSON.stringify(t).replace(/'/g, "&apos;")})' class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">${pushedIds.has(t.id) ? 'Pushed' : 'Push'}</button>
+                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 text-xs px-1">✕</button>
                     </div>
                 </div>`;
 
@@ -264,49 +259,20 @@
             document.getElementById('completed-count').innerText = completed.length;
             document.getElementById('completed-container').style.display = completed.length ? 'block' : 'none';
 
-            // Achievements Render
+            // Achievements List
             document.getElementById('achievement-list').innerHTML = allAchievements.map(a => `
-                <div class="flex items-center gap-3 p-4 bg-yellow-50/50 border border-yellow-100 rounded-xl">
-                    <span class="text-xl text-yellow-500">🏆</span>
-                    <span class="text-sm font-medium text-gray-700">${a.title}</span>
+                <div class="flex items-center justify-between p-4 bg-yellow-50/50 border border-yellow-100 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">🏆</span>
+                        <span class="text-sm font-medium text-gray-700">${a.title}</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-md uppercase tracking-tighter">${new Date(a.achieve_date).toLocaleDateString('vi-VN')}</span>
                 </div>`).join('');
 
-            // Priority Stats
-            const pTypes = [{ id: 1, label: 'High', color: 'bg-red-500' }, { id: 2, label: 'Medium', color: 'bg-orange-400' }, { id: 3, label: 'Low', color: 'bg-blue-400' }, { id: 4, label: 'None', color: 'bg-gray-300' }];
-            document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
-                const pTasks = allTasks.filter(t => t.priority === p.id);
-                const pDone = pTasks.filter(t => t.completed).length;
-                const pPerc = pTasks.length ? Math.round((pDone / pTasks.length) * 100) : 0;
-                return `<div class="stats-card"><div class="flex justify-between text-[9px] font-semibold mb-1.5 uppercase text-gray-400"><span>${p.label}</span><span>${pDone}/${pTasks.length}</span></div><div class="w-full bg-gray-200 h-1 rounded-full"><div class="${p.color} h-full transition-all" style="width:${pPerc}%"></div></div></div>`;
-            }).join('');
-
-            // Calendar Logic
-            if (currentTab === 'calendar') {
-                const groups = allTasks.reduce((acc, t) => {
-                    if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 };
-                    acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++; return acc;
-                }, {});
-                let html = '';
-                for (let m = 0; m < displayedMonths; m++) {
-                    const isActive = activeMonthIndex === m;
-                    html += `<div class="month-container border-b border-gray-50"><div class="month-header" onclick="toggleMonth(${m})"><span class="text-sm font-medium">Tháng ${m+1} - 2026</span><span class="text-[10px] transform ${isActive?'rotate-180':''}">▼</span></div><div class="month-content ${isActive?'active':''}"><div class="calendar-grid">`;
-                    for (let d = 1; d <= new Date(2026, m+1, 0).getDate(); d++) {
-                        const ds = `2026-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                        const data = groups[ds] || {total:0, done:0};
-                        const p = data.total ? Math.round(data.done/data.total*100) : 0;
-                        let c = 'bg-gray-50 text-gray-300';
-                        if(data.total>0) c = p>=80?'bg-indigo-50 text-indigo-500':p>=50?'bg-yellow-50 text-yellow-500':'bg-red-50 text-red-400';
-                        html += `<div class="day-box ${c}"><span class="day-num">${d}</span><span class="day-percent">${data.total?p+'%':''}</span></div>`;
-                    }
-                    html += `</div></div></div>`;
-                }
-                document.getElementById('calendar-list').innerHTML = html;
-            }
-
+            // Progress
             const perc = viewTasks.length ? Math.round((completed.length/viewTasks.length)*100) : 0;
             document.getElementById('progress-percent').innerText = perc+'%';
             document.getElementById('progress-circle').style.strokeDashoffset = 125.6-(perc/100)*125.6;
-            document.getElementById('stats-text').innerText = `${viewTasks.length} tasks recorded`;
         }
         window.onload = fetchTasks;
     </script>
