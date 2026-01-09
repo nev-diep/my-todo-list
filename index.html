@@ -18,29 +18,12 @@
         .cb-p1 { border-color: #ff4d4f; } .cb-p2 { border-color: #faad14; } .cb-p3 { border-color: #1890ff; } .cb-p4 { border-color: #d1d1d1; }
         .cb-custom:checked { background-color: #d1d1d1 !important; border-color: #d1d1d1 !important; }
         .cb-custom:checked::after { content: '✓'; color: white; font-size: 11px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-/* Nút Push vuông bo tròn */
-.btn-push {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    color: #6b7280;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-.btn-push:hover {
-    border-color: #5c67f2;
-    color: #5c67f2;
-}
-/* Trạng thái sau khi đã bấm */
-.btn-pushed {
-    background: #5c67f2 !important;
-    color: white !important;
-    border-color: #5c67f2 !important;
-}
-        /* Calendar Accordion Styling */
+
+        /* Nút Push Styling */
+        .btn-push { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px; border: 1px solid #e5e7eb; background: white; color: #6b7280; transition: all 0.2s; cursor: pointer; }
+        .btn-push:hover { border-color: #5c67f2; color: #5c67f2; }
+        .btn-pushed { background: #5c67f2 !important; color: white !important; border-color: #5c67f2 !important; }
+
         .month-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; transition: background 0.2s; }
         .month-header:hover { background: #f0f0f0; }
         .month-content { display: none; margin-bottom: 20px; padding: 10px 0; }
@@ -102,19 +85,17 @@
                 </div>
             </div>
             <div id="active-tasks" class="space-y-1"></div>
-<div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
-    <div class="flex items-center gap-2 text-gray-400 cursor-pointer" onclick="toggleCompletedList()">
-        <span id="chevron-svg" class="transition-transform duration-200 rotate-90 w-4 h-4 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
-                <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-        </span> 
-        <span class="text-[14px] font-medium">Completed</span>
-        <span id="completed-count" class="text-[12px] font-normal ml-0.5">0</span>
-    </div>
-    <div id="completed-tasks" class="space-y-1 mt-3"></div>
-</div>
-                <div id="completed-tasks" class="space-y-1 opacity-50"></div>
+            <div id="completed-container" class="mt-8 border-t border-gray-100 pt-4 hidden">
+                <div class="flex items-center gap-2 text-gray-400 cursor-pointer" onclick="toggleCompletedList()">
+                    <span id="chevron-svg" class="transition-transform duration-200 rotate-90 w-4 h-4 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </span> 
+                    <span class="text-[14px] font-medium">Completed</span>
+                    <span id="completed-count" class="text-[12px] font-normal ml-0.5">0</span>
+                </div>
+                <div id="completed-tasks" class="space-y-1 mt-3"></div>
             </div>
         </div>
 
@@ -147,27 +128,9 @@
         let currentTab = 'today';
         let showCompleted = true;
         let displayedMonths = 1;
-        let activeMonthIndex = 0; // Theo dõi tháng nào đang được mở
-        let pushedIds = new Set(); // Theo dõi các task đã được push trong phiên làm việc
+        let activeMonthIndex = 0;
+        let pushedIds = new Set(); 
 
-async function pushTask(btn, id, text, priority) {
-    const d = new Date(); 
-    d.setDate(d.getDate() + 1);
-    const tomorrow = d.toISOString().split('T')[0];
-    
-    // Tạo bản sao mới cho ngày mai
-    const { error } = await client.from('tasks').insert([
-        { text: text, priority: priority, task_date: tomorrow, completed: false }
-    ]);
-    
-    if (!error) {
-        pushedIds.add(id); // Đánh dấu task này đã được đẩy đi
-        btn.innerText = "Pushed";
-        btn.classList.add('btn-pushed');
-        // Tải lại dữ liệu để cập nhật danh sách ngày mai
-        fetchTasks(); 
-    }
-}
         const getFormattedDate = (offset = 0) => {
             const d = new Date(); d.setDate(d.getDate() + offset);
             return d.toISOString().split('T')[0];
@@ -184,6 +147,17 @@ async function pushTask(btn, id, text, priority) {
             const targetDate = currentTab === 'tomorrow' ? getFormattedDate(1) : getFormattedDate(0);
             await client.from('tasks').insert([{ text: input.value, priority: parseInt(document.getElementById('priority-input').value), task_date: targetDate }]);
             input.value = ''; fetchTasks();
+        }
+
+        async function pushTask(btn, id, text, priority) {
+            const tomorrow = getFormattedDate(1);
+            const { error } = await client.from('tasks').insert([{ text: text, priority: priority, task_date: tomorrow, completed: false }]);
+            if (!error) {
+                pushedIds.add(id);
+                btn.innerText = "Pushed";
+                btn.classList.add('btn-pushed');
+                fetchTasks();
+            }
         }
 
         async function toggleTask(id, status) {
@@ -212,7 +186,7 @@ async function pushTask(btn, id, text, priority) {
 
         function addNewMonth() {
             displayedMonths++;
-            activeMonthIndex = displayedMonths - 1; // Tự động mở tháng mới thêm
+            activeMonthIndex = displayedMonths - 1;
             render();
         }
 
@@ -245,33 +219,30 @@ async function pushTask(btn, id, text, priority) {
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
 
-// Task chưa hoàn thành (Giữ nguyên)
-activeEl.innerHTML = active.map(t => `
-    <div class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50 last:border-0">
-        <div class="flex items-center gap-3">
-            <input type="checkbox" onchange="toggleTask(${t.id}, false)" class="cb-custom cb-p${t.priority}">
-            <span class="text-sm text-gray-700 font-medium">${t.text}</span>
-        </div>
-        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 px-2">✕</button>
-    </div>
-`).join('');
+            document.getElementById('active-tasks').innerHTML = active.map(t => `
+                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" onchange="toggleTask(${t.id}, false)" class="cb-custom cb-p${t.priority}">
+                        <span class="text-[13px] text-gray-700">${t.text}</span>
+                    </div>
+                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
+                </div>`).join('');
 
-// Task đã hoàn thành (Thêm nút Push luôn hiển thị)
-completedEl.innerHTML = completed.map(t => `
-    <div class="group flex items-center justify-between py-2 px-2 hover:bg-gray-50 rounded-lg transition border-b border-gray-50 last:border-0">
-        <div class="flex items-center gap-3">
-            <input type="checkbox" checked onchange="toggleTask(${t.id}, true)" class="cb-custom cb-p${t.priority}">
-            <span class="text-sm text-gray-300 line-through font-medium">${t.text}</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' 
-                    class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">
-                ${pushedIds.has(t.id) ? 'Pushed' : 'Push'}
-            </button>
-            <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 px-2">✕</button>
-        </div>
-    </div>
-`).join('');
+            document.getElementById('completed-tasks').innerHTML = completed.map(t => `
+                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" checked onchange="toggleTask(${t.id}, true)" class="cb-custom cb-p${t.priority}">
+                        <span class="text-[13px] text-gray-300 line-through">${t.text}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' 
+                                class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">
+                            ${pushedIds.has(t.id) ? 'Pushed' : 'Push'}
+                        </button>
+                        <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
+                    </div>
+                </div>`).join('');
+
             document.getElementById('completed-count').innerText = completed.length;
             document.getElementById('completed-container').style.display = completed.length ? 'block' : 'none';
 
@@ -284,8 +255,6 @@ completedEl.innerHTML = completed.map(t => `
 
                 let html = '';
                 for (let m = 0; m < displayedMonths; m++) {
-                    const monthDate = new Date(2026, m, 1);
-                    const monthName = monthDate.toLocaleString('default', { month: 'long' });
                     const daysInMonth = new Date(2026, m + 1, 0).getDate();
                     const isActive = activeMonthIndex === m;
 
