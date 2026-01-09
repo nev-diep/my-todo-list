@@ -28,6 +28,8 @@
         .day-percent { font-size: 8px; font-weight: 400; opacity: 0.7; }
         #progress-circle { stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
         .stats-card { background: #fafafa; border-radius: 8px; padding: 10px; border: 1px solid #f0f0f0; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
     </style>
 </head>
 <body class="flex h-screen">
@@ -91,37 +93,15 @@
     </main>
 
     <aside class="w-72 bg-[#fafafa] border-l border-gray-100 p-8 flex flex-col shrink-0 overflow-y-auto">
-        <div class="text-center mb-8">
+        <div class="text-center mb-12">
             <p class="text-[10px] uppercase tracking-widest text-gray-400 font-medium mb-2">Lifetime Score</p>
             <h1 id="total-score" class="text-5xl font-light text-[#5c67f2] tracking-tighter">0</h1>
         </div>
 
-        <div class="space-y-6">
-            <div>
-                <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mb-3">Habit Streak</h4>
-                <div class="stats-card flex items-center justify-between">
-                    <span class="text-xs text-gray-500 font-medium">Consecutive Perfect Days</span>
-                    <span id="habit-streak" class="text-xl font-semibold text-orange-500">0</span>
-                </div>
-            </div>
-
-            <div>
-                <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mb-3">Monthly Growth</h4>
-                <div id="growth-stat" class="stats-card flex flex-col gap-1">
-                    <div class="flex justify-between items-end">
-                        <span class="text-[10px] text-gray-400 uppercase">vs Last Month</span>
-                        <span id="growth-value" class="text-sm font-bold">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-                        <div id="growth-bar" class="bg-green-400 h-full w-0 transition-all duration-1000"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mb-3">Task Efficiency</h4>
-                <div id="priority-stats" class="space-y-3"></div>
-            </div>
+        <div id="right-sidebar-content" class="flex-1 space-y-5">
+            <h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Task Efficiency</h4>
+            <div id="priority-stats" class="space-y-3"></div>
+            <div id="habit-counter-container"></div>
         </div>
     </aside>
 
@@ -202,77 +182,55 @@
             document.getElementById('chevron-svg').style.transform = showCompleted ? 'rotate(90deg)' : 'rotate(0deg)';
         }
 
-        function calculateStats() {
-            const today = new Date();
-            const todayStr = getFormattedDate(0);
+        function getMonthScoreStats() {
+            const now = new Date();
+            const currentM = now.getMonth();
+            const prevM = currentM - 1;
+            const prevPrevM = currentM - 2;
             
-            // 1. Habit Streak (Chuỗi ngày hoàn thành 100%)
-            const dailyGroups = allTasks.reduce((acc, t) => {
-                if (t.task_date > todayStr) return acc;
-                if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 };
-                acc[t.task_date].total++;
-                if (t.completed) acc[t.task_date].done++;
-                return acc;
-            }, {});
+            const calculate = (mIndex) => {
+                if (mIndex < 0) return 0;
+                let score = 0;
+                const pts = { 1: 4, 2: 3, 3: 2, 4: 1 };
+                allTasks.forEach(t => {
+                    const tDate = new Date(t.task_date);
+                    if (tDate.getMonth() === mIndex && t.completed) score += pts[t.priority];
+                });
+                return score;
+            };
 
-            let streak = 0;
-            let checkDate = new Date();
-            while (true) {
-                const dateStr = checkDate.toISOString().split('T')[0];
-                const dayData = dailyGroups[dateStr];
-                if (dayData && dayData.total > 0 && dayData.done === dayData.total) {
-                    streak++;
-                    checkDate.setDate(checkDate.getDate() - 1);
-                } else {
-                    break;
-                }
-            }
-            document.getElementById('habit-streak').innerText = streak;
-
-            // 2. Growth Comparison (So với tháng trước)
-            const currentMonth = today.getMonth() + 1;
-            const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-            const currentYear = today.getFullYear();
-            const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-
-            const currentMonthDone = allTasks.filter(t => {
-                const d = new Date(t.task_date);
-                return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear && t.completed;
-            }).length;
-
-            const lastMonthDone = allTasks.filter(t => {
-                const d = new Date(t.task_date);
-                return d.getMonth() + 1 === lastMonth && d.getFullYear() === lastMonthYear && t.completed;
-            }).length;
-
+            const scoreLastMonth = calculate(prevM);
+            const scorePrevPrevMonth = calculate(prevPrevM);
+            
             let growth = 0;
-            if (lastMonthDone > 0) {
-                growth = Math.round(((currentMonthDone - lastMonthDone) / lastMonthDone) * 100);
-            } else if (currentMonthDone > 0) {
-                growth = 100;
+            if (scorePrevPrevMonth > 0) {
+                growth = Math.round(((scoreLastMonth - scorePrevPrevMonth) / scorePrevPrevMonth) * 100);
             }
 
-            const growthValEl = document.getElementById('growth-value');
-            const growthBarEl = document.getElementById('growth-bar');
-            growthValEl.innerText = (growth >= 0 ? '+' : '') + growth + '%';
-            growthValEl.className = `text-sm font-bold ${growth >= 0 ? 'text-green-500' : 'text-red-500'}`;
-            growthBarEl.style.width = Math.min(Math.abs(growth), 100) + '%';
-            growthBarEl.className = `h-full transition-all duration-1000 ${growth >= 0 ? 'bg-green-400' : 'bg-red-400'}`;
+            return { lastMonth: scoreLastMonth, growth: growth };
         }
 
         function render() {
             const todayStr = getFormattedDate(0);
             
-            // TÍNH ĐIỂM
             let totalScore = 0;
             const points = { 1: 4, 2: 3, 3: 2, 4: 1 };
             allTasks.forEach(t => {
                 if (t.completed) totalScore += points[t.priority];
                 else if (t.task_date < todayStr) totalScore -= points[t.priority];
             });
-            document.getElementById('total-score').innerText = totalScore;
 
-            // THỐNG KÊ CHI TIẾT (Priority)
+            const stats = getMonthScoreStats();
+            document.getElementById('total-score').innerHTML = `
+                ${totalScore}
+                <div class="text-[11px] font-medium text-gray-400 mt-2 tracking-normal">
+                    Last Month: <span class="text-gray-600">${stats.lastMonth}</span> 
+                    <span class="${stats.growth >= 0 ? 'text-green-500' : 'text-red-400'} ml-1">
+                        (${stats.growth >= 0 ? '↑' : '↓'} ${Math.abs(stats.growth)}%)
+                    </span>
+                </div>
+            `;
+
             const pTypes = [{ id: 1, label: 'High', color: 'bg-red-500', icon: '🔴' }, { id: 2, label: 'Medium', color: 'bg-orange-400', icon: '🟡' }, { id: 3, label: 'Low', color: 'bg-blue-400', icon: '🔵' }, { id: 4, label: 'None', color: 'bg-gray-300', icon: '⚪' }];
             document.getElementById('priority-stats').innerHTML = pTypes.map(p => {
                 const pTasks = allTasks.filter(t => t.priority === p.id);
@@ -281,50 +239,57 @@
                 return `<div class="stats-card"><div class="flex justify-between text-[9px] font-semibold mb-1.5 uppercase text-gray-500"><span>${p.icon} ${p.label}</span><span>${pDone}/${pTasks.length}</span></div><div class="w-full bg-gray-200 h-1 rounded-full"><div class="${p.color} h-full transition-all duration-700" style="width:${pPercent}%"></div></div></div>`;
             }).join('');
 
-            // GỌI HÀM TÍNH STREAK & GROWTH
-            calculateStats();
+            const completedCounts = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                acc[t.text] = (acc[t.text] || 0) + 1;
+                return acc;
+            }, {});
 
-            // RENDER DANH SÁCH TASK
+            let habitHtml = `<h4 class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 mt-8">Habit Counter</h4><div class="space-y-2 mt-3">`;
+            for (const [name, count] of Object.entries(completedCounts)) {
+                habitHtml += `<div class="flex justify-between text-[11px] text-gray-500"><span>${name}</span><span class="font-bold text-[#5c67f2]">${count}x</span></div>`;
+            }
+            habitHtml += `</div>`;
+            document.getElementById('habit-counter-container').innerHTML = habitHtml;
+
             const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
 
-            document.getElementById('active-tasks').innerHTML = active.map(t => `
+            const taskMapper = t => `
                 <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
                     <div class="flex items-center gap-3">
-                        <input type="checkbox" onchange="toggleTask(${t.id}, false)" class="cb-custom cb-p${t.priority}">
-                        <span class="text-[13px] text-gray-700">${t.text}</span>
-                    </div>
-                    <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
-                </div>`).join('');
-
-            document.getElementById('completed-tasks').innerHTML = completed.map(t => `
-                <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" checked onchange="toggleTask(${t.id}, true)" class="cb-custom cb-p${t.priority}">
-                        <span class="text-[13px] text-gray-300">${t.text}</span>
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id}, ${t.completed})" class="cb-custom cb-p${t.priority}">
+                        <span class="text-[13px] ${t.completed ? 'text-gray-300' : 'text-gray-700'}">${t.text}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">${pushedIds.has(t.id) ? 'Pushed' : 'Push'}</button>
+                        ${t.completed ? `<button onclick='pushTask(this, ${t.id}, "${t.text.replace(/"/g, '&quot;')}", ${t.priority})' class="btn-push ${pushedIds.has(t.id) ? 'btn-pushed' : ''}">${pushedIds.has(t.id) ? 'Pushed' : 'Push'}</button>` : ''}
                         <button onclick="deleteTask(${t.id})" class="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-all text-xs">✕</button>
                     </div>
-                </div>`).join('');
-
+                </div>`;
+            document.getElementById('active-tasks').innerHTML = active.map(taskMapper).join('');
+            document.getElementById('completed-tasks').innerHTML = completed.map(taskMapper).join('');
             document.getElementById('completed-count').innerText = completed.length;
             document.getElementById('completed-container').style.display = completed.length ? 'block' : 'none';
 
-            // RENDER CALENDAR (Giữ nguyên logic của bạn)
             if (currentTab === 'calendar') {
                 const calList = document.getElementById('calendar-list');
                 const groups = allTasks.reduce((acc, t) => {
                     if (!acc[t.task_date]) acc[t.task_date] = { total: 0, done: 0 };
                     acc[t.task_date].total++; if (t.completed) acc[t.task_date].done++; return acc;
                 }, {});
+
                 let html = '';
                 for (let m = 0; m < displayedMonths; m++) {
                     const daysInMonth = new Date(2026, m + 1, 0).getDate();
                     const isActive = activeMonthIndex === m;
-                    html += `<div class="month-container border-b border-gray-50 last:border-0"><div class="month-header" onclick="toggleMonth(${m})"><span class="text-sm font-medium text-gray-700">Tháng ${m + 1} 2026</span><span class="text-gray-400 text-[10px] transform ${isActive ? 'rotate-180' : ''}">▼</span></div><div class="month-content ${isActive ? 'active' : ''}"><div class="calendar-grid">`;
+                    html += `
+                        <div class="month-container border-b border-gray-50 last:border-0">
+                            <div class="month-header" onclick="toggleMonth(${m})">
+                                <span class="text-sm font-medium text-gray-700">Tháng ${m + 1} 2026</span>
+                                <span class="text-gray-400 text-[10px] transform ${isActive ? 'rotate-180' : ''}">▼</span>
+                            </div>
+                            <div class="month-content ${isActive ? 'active' : ''}">
+                                <div class="calendar-grid">`;
                     for (let d = 1; d <= daysInMonth; d++) {
                         const dateStr = `2026-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         const data = groups[dateStr] || { total: 0, done: 0 };
