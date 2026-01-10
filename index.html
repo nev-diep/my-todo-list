@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My To-do List</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -30,6 +30,26 @@
         .stats-card { background: #fafafa; border-radius: 8px; padding: 10px; border: 1px solid #f0f0f0; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
+        /* Mặc định cho Mobile */
+@media (max-width: 768px) {
+    aside {
+        display: none; /* Ẩn cả 2 sidebar */
+    }
+    main {
+        padding: 16px !important; /* Thu nhỏ padding cho màn hình nhỏ */
+    }
+    .max-w-3xl, .max-w-2xl {
+        width: 100% !important;
+    }
+    /* Hiện sidebar khi có class active (dành cho menu sau này) */
+    aside.mobile-active {
+        display: flex;
+        position: fixed;
+        z-index: 50;
+        height: 100%;
+        width: 80%;
+    }
+}
     </style>
 </head>
 <body class="flex h-screen">
