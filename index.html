@@ -253,19 +253,19 @@
 
             const viewTasks = allTasks.filter(t => {
                 if (currentTab === 'today') {
-                    // 1. Luôn hiện tất cả task của ngày hôm nay (dù xong hay chưa)
+                    // 1. Nếu là task của hôm nay: Luôn hiện (cả Active và Completed)
                     if (t.task_date === todayStr) return true;
                     
-                    // 2. Hiện task từ quá khứ NHƯNG chỉ khi nó CHƯA hoàn thành (để nhắc việc)
+                    // 2. Nếu là task cũ (quá khứ): Chỉ hiện nếu CHƯA hoàn thành
                     if (t.task_date < todayStr && !t.completed) return true;
                     
-                    // 3. Các trường hợp còn lại (đã xong từ ngày hôm qua trở về trước) -> Ẩn
+                    // 3. Các trường hợp còn lại: Ẩn
                     return false;
                 } 
                 else if (currentTab === 'tomorrow') {
                     return t.task_date === getFormattedDate(1);
                 }
-                return true; // Cho tab Calendar
+                return true; 
             });
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
