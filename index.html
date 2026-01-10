@@ -35,22 +35,79 @@
     display: flex;
     flex-direction: row;
 }
-        /* Mặc định cho Mobile */
+        /* Mặc định ẩn trên máy tính */
+.bottom-nav, .fab-add {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    /* 1. Ẩn 2 cột bên cạnh đi */
-    aside {
-        display: none !important; 
+    /* Hiện thanh điều hướng và nút nổi */
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom); /* Cho iPhone đời mới */
     }
 
-    /* 2. Cho phần nội dung chính (Main) chiếm 100% chiều ngang */
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #6b7280;
+        font-size: 12px;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .nav-item.active {
+        color: #5c67f2;
+    }
+
+    .nav-item i {
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+
+    /* Nút thêm task nổi tròn */
+    .fab-add {
+        display: flex;
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        background: #5c67f2;
+        color: white;
+        border-radius: 50%;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        z-index: 999;
+        border: none;
+    }
+
+    /* Đẩy phần nội dung chính lên để không bị thanh nav che mất */
     main {
-        width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding: 10px !important;
+        padding-bottom: 100px !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
     }
 
-    /* 3. Phóng to các nút bấm cho dễ chạm bằng tay */
+    /* Ẩn 2 thanh sidebar cũ */
+    aside {
+        display: none !important;
+    }
+}
+  /* 3. Phóng to các nút bấm cho dễ chạm bằng tay */
     button, input {
         font-size: 16px !important; /* Tránh iOS tự động zoom khi focus vào input */
     }
@@ -58,7 +115,28 @@
     </style>
 </head>
 <body class="flex h-screen">
+<nav class="bottom-nav">
+    <button onclick="switchTab('today')" class="nav-item" id="nav-today">
+        <i class="fas fa-calendar-check"></i>
+        <span>Hôm nay</span>
+    </button>
+    <button onclick="switchTab('tomorrow')" class="nav-item" id="nav-tomorrow">
+        <i class="fas fa-clock"></i>
+        <span>Ngày mai</span>
+    </button>
+    <button onclick="switchTab('calendar')" class="nav-item" id="nav-calendar">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Lịch</span>
+    </button>
+    <button onclick="switchTab('achievements')" class="nav-item" id="nav-rank">
+        <i class="fas fa-trophy"></i>
+        <span>Danh hiệu</span>
+    </button>
+</nav>
 
+<button class="fab-add" onclick="document.getElementById('task-input').focus()">
+    <i class="fas fa-plus"></i>
+</button>
     <aside class="w-60 bg-[#fafafa] border-r border-gray-100 flex flex-col pt-8 shrink-0">
         <div class="px-6 mb-8 flex items-center gap-2">
             <div class="w-6 h-6 bg-[#5c67f2] rounded flex items-center justify-center text-white text-xs">✓</div>
