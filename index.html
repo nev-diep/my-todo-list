@@ -251,9 +251,26 @@
             habitHtml += `</div>`;
             document.getElementById('habit-counter-container').innerHTML = habitHtml;
 
-            const viewTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= todayStr : (currentTab === 'tomorrow' ? t.task_date === getFormattedDate(1) : true));
-            const active = viewTasks.filter(t => !t.completed);
-            const completed = viewTasks.filter(t => t.completed);
+            const viewTasks = allTasks.filter(t => {
+        if (currentTab === 'today') {
+            // 1. Task thuộc ngày hôm nay (hiện cả xong & chưa xong)
+            if (t.task_date === todayStr) return true;
+            
+            // 2. Task từ quá khứ NHƯNG chưa hoàn thành (hiện để làm tiếp)
+            if (t.task_date < todayStr && !t.completed) return true;
+            
+            // 3. Các trường hợp còn lại (đã xong từ hôm qua trở về trước) -> Ẩn
+            return false;
+        } 
+        else if (currentTab === 'tomorrow') {
+            return t.task_date === getFormattedDate(1);
+        }
+        return true; // Cho tab Calendar/Achievements
+    });
+
+    const active = viewTasks.filter(t => !t.completed);
+    const completed = viewTasks.filter(t => t.completed);
+            }
 
             const taskMapper = t => `
                 <div class="group flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 rounded-lg transition">
