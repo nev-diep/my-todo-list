@@ -251,18 +251,25 @@
             habitHtml += `</div>`;
             document.getElementById('habit-counter-container').innerHTML = habitHtml;
 
-            const viewTasks = allTasks.filter(t => {
-                // Đảm bảo so sánh chính xác bằng cách ép về chuỗi ngày YYYY-MM-DD
-                const tDate = t.task_date; 
+const viewTasks = allTasks.filter(t => {
+                const tDate = t.task_date;
 
                 if (currentTab === 'today') {
-                    // Trường hợp 1: Task của chính ngày hôm nay -> Luôn hiện dù xong hay chưa
+                    // 1. Task của ngày hôm nay: Hiện tất cả (Xong hay chưa đều hiện)
                     if (tDate === todayStr) return true;
                     
-                    // Trường hợp 2: Task của những ngày trước (quá khứ) -> Chỉ hiện nếu chưa xong
-                    if (tDate < todayStr && !t.completed) return true;
+                    // 2. Task của quá khứ:
+                    if (tDate < todayStr) {
+                        // - Nếu CHƯA xong: Hiện (để người dùng làm tiếp)
+                        if (!t.completed) return true;
+                        
+                        // - Nếu ĐÃ xong: Thông thường sẽ ẩn, NHƯNG nếu nó vừa được tích 
+                        // trong phiên làm việc này (vẫn đang ở màn hình) thì ta vẫn hiện.
+                        // Cách đơn giản nhất: Cho hiện tất cả task đã xong của QUÁ KHỨ 
+                        // ở mục Completed của ngày hôm nay để người dùng thấy thành quả.
+                        return true; 
+                    }
                     
-                    // Trường hợp 3: Còn lại (Task quá khứ đã xong) -> Ẩn để dọn dẹp
                     return false;
                 } 
                 
@@ -270,7 +277,7 @@
                     return tDate === getFormattedDate(1);
                 }
 
-                return true; // Cho tab Calendar
+                return true;
             });
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
