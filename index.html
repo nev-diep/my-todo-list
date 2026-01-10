@@ -362,8 +362,7 @@ const viewTasks = allTasks.filter(t => {
         }
 
         window.onload = fetchTasks;
-    </script>
-    if ('serviceWorker' in navigator) {
+            if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
             console.log('Service Worker đã sẵn sàng!', reg);
@@ -372,5 +371,6 @@ const viewTasks = allTasks.filter(t => {
         });
     });
 }
+    </script>
 </body>
 </html>
