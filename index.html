@@ -252,20 +252,25 @@
             document.getElementById('habit-counter-container').innerHTML = habitHtml;
 
             const viewTasks = allTasks.filter(t => {
+                // Đảm bảo so sánh chính xác bằng cách ép về chuỗi ngày YYYY-MM-DD
+                const tDate = t.task_date; 
+
                 if (currentTab === 'today') {
-                    // 1. Nếu là task của hôm nay: Luôn hiện (cả Active và Completed)
-                    if (t.task_date === todayStr) return true;
+                    // Trường hợp 1: Task của chính ngày hôm nay -> Luôn hiện dù xong hay chưa
+                    if (tDate === todayStr) return true;
                     
-                    // 2. Nếu là task cũ (quá khứ): Chỉ hiện nếu CHƯA hoàn thành
-                    if (t.task_date < todayStr && !t.completed) return true;
+                    // Trường hợp 2: Task của những ngày trước (quá khứ) -> Chỉ hiện nếu chưa xong
+                    if (tDate < todayStr && !t.completed) return true;
                     
-                    // 3. Các trường hợp còn lại: Ẩn
+                    // Trường hợp 3: Còn lại (Task quá khứ đã xong) -> Ẩn để dọn dẹp
                     return false;
                 } 
-                else if (currentTab === 'tomorrow') {
-                    return t.task_date === getFormattedDate(1);
+                
+                if (currentTab === 'tomorrow') {
+                    return tDate === getFormattedDate(1);
                 }
-                return true; 
+
+                return true; // Cho tab Calendar
             });
             const active = viewTasks.filter(t => !t.completed);
             const completed = viewTasks.filter(t => t.completed);
