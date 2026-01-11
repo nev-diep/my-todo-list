@@ -3,106 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <link rel="manifest" href="manifest.json">
-    <title>0.1% Discipline</title>
+    <title>0.1% Discipline Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --primary: #5c67f2; --success: #10b981; }
-        body { font-family: 'Inter', sans-serif; background-color: #fff; color: #333; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; overflow-x: hidden; }
         
-        /* Hiệu ứng nhảy số và bay điểm */
-.floating-point {
-    position: fixed;
-    font-weight: 900;
-    color: #5c67f2;
-    text-shadow: 0 0 20px rgba(92, 103, 242, 0.5); /* Tạo hiệu ứng phát sáng */
-    pointer-events: none;
-    z-index: 9999;
-    transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1); /* Chuyển động mượt mà hơn */
-    font-size: 1rem; /* Bắt đầu nhỏ */
-    opacity: 0;
-}
-        @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); color: var(--success); } }
+        /* 1. Hiện tổng điểm & 3. Chỗ trống huy chương */
+        .score-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 70px;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 1000; border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* 9. Cỡ chữ to hơn */
+        .task-name { font-size: 1.15rem; font-weight: 600; transition: all 0.2s; }
+
+        /* 2. Hiệu ứng bay điểm */
+        .floating-point {
+            position: fixed; font-weight: 800; color: #4f46e5; pointer-events: none;
+            z-index: 9999; transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            font-size: 1.2rem; opacity: 0;
+        }
+
         .bump-animation { animation: bump 0.4s ease-out; }
+        @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); color: #10b981; } }
 
-        /* Giao diện Mobile tối ưu */
-        .task-text { font-size: 1.05rem; font-weight: 500; }
-        .cb-custom { appearance: none; width: 22px; height: 22px; border-radius: 6px; border: 2px solid #e5e7eb; cursor: pointer; position: relative; }
-        .cb-p1 { border-color: #ef4444; } .cb-p2 { border-color: #f59e0b; } .cb-p3 { border-color: #3b82f6; }
-        .cb-custom:checked { background-color: #10b981 !important; border-color: #10b981 !important; }
-        .cb-custom:checked::after { content: '✓'; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; }
+        /* Custom Checkbox */
+        .cb-custom { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #d1d5db; cursor: pointer; appearance: none; position: relative; }
+        .cb-custom:checked { background-color: #10b981; border-color: #10b981; }
+        .cb-custom:checked::after { content: '✓'; color: white; position: absolute; left: 4px; top: -2px; font-size: 16px; }
 
-        /* Huy chương Placeholder */
-        .medal-slot { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
-
-        @media (max-width: 768px) {
-            aside { display: none !important; }
-            main { padding: 20px 15px 120px 15px !important; }
-            .bottom-nav {
-                position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
-                background: white; border-top: 1px solid #eee;
-                display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-            .fab-add {
-                position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px;
-                background: var(--primary); color: white; border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                box-shadow: 0 10px 25px rgba(92,103,242,0.3); z-index: 999;
-            }
-            .score-header-mobile { display: flex !important; }
+        .medal-slot { width: 40px; height: 40px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
+        
+        main { padding: 90px 15px 100px 15px; max-width: 600px; margin: 0 auto; }
+        
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+            background: white; border-top: 1px solid #e5e7eb;
+            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
         }
     </style>
 </head>
-<body class="flex h-screen bg-gray-50">
+<body>
 
-    <div class="score-header-mobile hidden fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md p-4 z-[500] items-center justify-between border-b border-gray-100">
+    <header class="score-header">
         <div class="flex items-center gap-3">
             <div id="medal-container" class="medal-slot">
-                <i class="fas fa-certificate text-gray-200 text-2xl"></i> 
+                <i class="fas fa-medal text-gray-300 text-xl"></i>
             </div>
             <div>
-                <p class="text-[10px] uppercase tracking-tighter text-gray-400 font-bold">Total Score</p>
-                <h1 id="total-score-mobile" class="text-2xl font-bold text-gray-800">0</h1>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Score</p>
+                <h1 id="total-score" class="text-2xl font-extrabold text-indigo-600">0</h1>
             </div>
         </div>
         <div class="text-right">
-            <p id="rank-title-mobile" class="text-[11px] font-bold text-indigo-500 uppercase">Khởi Hành</p>
+            <p id="rank-title" class="text-[11px] font-bold text-gray-500 uppercase">Khởi Đầu</p>
         </div>
-    </div>
+    </header>
 
-    <main class="flex-1 overflow-y-auto pt-20">
-        <div id="todo-view" class="max-w-xl mx-auto">
-            <h2 id="view-title" class="text-xl font-bold mb-6 text-gray-400 px-2">Today</h2>
-            
-            <div id="active-tasks" class="space-y-3 px-2"></div>
+    <main>
+        <div id="todo-view">
+            <div id="active-tasks" class="space-y-4"></div>
 
-            <div id="completed-container" class="mt-10 px-2">
-                <button onclick="toggleCompletedList()" class="flex items-center gap-2 text-gray-400 mb-4 bg-gray-100 px-3 py-1.5 rounded-lg text-sm">
-                    <i id="chevron" class="fas fa-chevron-right transition-transform"></i>
+            <details class="mt-10 group" id="completed-section">
+                <summary class="flex items-center gap-2 text-gray-400 font-medium cursor-pointer list-none bg-gray-50 p-3 rounded-xl">
+                    <i class="fas fa-chevron-right transition-transform group-open:rotate-90"></i>
                     <span>Đã hoàn thành (<span id="completed-count">0</span>)</span>
-                </button>
-                <div id="completed-tasks" class="hidden space-y-2 opacity-60"></div>
-            </div>
+                </summary>
+                <div id="completed-tasks" class="mt-4 space-y-3 opacity-60"></div>
+            </details>
         </div>
 
-        <div id="achievements-view" class="hidden max-w-xl mx-auto px-4 pb-20">
-            <h2 class="text-2xl font-bold mb-6">Thành Tựu & Hệ Số</h2>
-            <div id="achievement-list" class="space-y-4"></div>
+        <div id="achievements-view" class="hidden">
+            <h2 class="text-xl font-extrabold mb-6">Thành Tựu Tích Lũy</h2>
+            <div id="achievement-list" class="space-y-3"></div>
         </div>
     </main>
 
     <nav class="bottom-nav">
-        <button onclick="switchTab('today')" class="nav-item text-gray-400 flex flex-col items-center"><i class="fas fa-bolt mb-1"></i><span class="text-[10px]">Hôm nay</span></button>
-        <button onclick="switchTab('tomorrow')" class="nav-item text-gray-400 flex flex-col items-center"><i class="fas fa-calendar-alt mb-1"></i><span class="text-[10px]">Ngày mai</span></button>
-        <button onclick="switchTab('achievements')" class="nav-item text-gray-400 flex flex-col items-center"><i class="fas fa-trophy mb-1"></i><span class="text-[10px]">Danh hiệu</span></button>
+        <button onclick="switchTab('today')" class="flex flex-col items-center gap-1 text-indigo-600">
+            <i class="fas fa-list-check"></i><span class="text-[10px] font-bold">Tasks</span>
+        </button>
+        <button onclick="addNewTask()" class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button onclick="switchTab('achievements')" class="flex flex-col items-center gap-1 text-gray-400">
+            <i class="fas fa-trophy"></i><span class="text-[10px] font-bold">Huy Chương</span>
+        </button>
     </nav>
-
-    <button class="fab-add" onclick="addNewTaskPrompt()"><i class="fas fa-plus"></i></button>
 
     <script>
         const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
@@ -111,195 +104,190 @@
 
         let allTasks = [];
         let currentTab = 'today';
-        let currentTotalScore = 0;
 
-        // Logic Danh hiệu 3 tháng (1 quý)
-        const RANKS = [
-            { day: 0, title: "Người Khởi Hành" },
-            { day: 91, title: "Kẻ Kỷ Luật" },
-            { day: 182, title: "Chiến Binh Thép" },
-            { day: 273, title: "Bậc Thầy Tự Thân" },
-            // ... Bạn có thể thêm đủ 40 mốc ở đây
-        ];
+        // Yêu cầu 4: Công thức lũy thừa 1.001^n
+        function getTaskPoints(priority, streak) {
+            const base = { 1: 4, 2: 3, 3: 2, 4: 1 };
+            return base[priority] * Math.pow(1.001, streak || 0);
+        }
 
         async function fetchTasks() {
             const { data, error } = await client.from('tasks').select('*');
-            if (!error) {
-                allTasks = data || [];
-                calculateScore();
-                render();
-            }
+            if (error) return;
+            allTasks = data || [];
+            updateTotalScore();
+            render();
         }
 
-        // 4. Công thức lũy thừa 1.001^n
-        function calculateTaskPoints(priority, streak) {
-            const basePoints = { 1: 4, 2: 3, 3: 2, 4: 1 };
-            const n = streak || 0;
-            return basePoints[priority] * Math.pow(1.001, n);
-        }
-
-        function calculateScore() {
-            let total = 0;
+        function updateTotalScore() {
             const today = new Date().toISOString().split('T')[0];
-            allTasks.forEach(t => {
-                const points = calculateTaskPoints(t.priority, t.streak);
-                if (t.completed) total += points;
-                else if (t.task_date < today) total -= points;
-            });
+            const total = allTasks.reduce((sum, t) => {
+                const p = getTaskPoints(t.priority, t.streak);
+                if (t.completed) return sum + p;
+                if (t.task_date < today) return sum - p; // Trừ điểm nếu lỡ task
+                return sum;
+            }, 0);
             
-            const oldScore = currentTotalScore;
-            currentTotalScore = total;
-            animateNumber(document.getElementById('total-score-mobile'), oldScore, currentTotalScore, 800);
+            animateNumber('total-score', total);
+            updateRankAndMedal(total);
         }
 
-        async function toggleTask(id, currentStatus, streak, priority, event) {
-            const newStatus = !currentStatus;
-            const points = calculateTaskPoints(priority, streak);
+        // Yêu cầu 2: Hiệu ứng bay điểm (Click -> Giữa -> Đích)
+        function shootPoint(e, points) {
+            const el = document.createElement('div');
+            el.className = 'floating-point';
+            el.innerHTML = `+${points.toFixed(2)}`;
+            el.style.left = e.clientX + 'px';
+            el.style.top = e.clientY + 'px';
+            el.style.opacity = '1';
+            document.body.appendChild(el);
+
+            const scoreEl = document.getElementById('total-score');
+            const rect = scoreEl.getBoundingClientRect();
+
+            // Giai đoạn 1: Ra giữa và to nhất
+            setTimeout(() => {
+                el.style.left = '50%';
+                el.style.top = '50%';
+                el.style.transform = 'translate(-50%, -50%) scale(4)';
+                el.style.color = '#10b981';
+            }, 50);
+
+            // Giai đoạn 2: Bay về tổng điểm
+            setTimeout(() => {
+                el.style.left = rect.left + 'px';
+                el.style.top = rect.top + 'px';
+                el.style.transform = 'scale(0.1)';
+                el.style.opacity = '0';
+            }, 800);
+
+            setTimeout(() => {
+                el.remove();
+                scoreEl.classList.add('bump-animation');
+                setTimeout(() => scoreEl.classList.remove('bump-animation'), 400);
+            }, 1400);
+        }
+
+        // Yêu cầu 5: Logic Streak 14 ngày
+        async function toggleTask(id, status, priority, streak, e) {
+            const newStatus = !status;
+            const points = getTaskPoints(priority, streak);
             
-            // Hiệu ứng bay điểm (Yêu cầu 2)
             if (newStatus) {
-                shootPoint(event, points);
+                shootPoint(e, points);
+                // Logic: Cứ mỗi lần hoàn thành là +1 n vào lũy thừa
+                streak = (streak || 0) + 1;
             }
 
             await client.from('tasks').update({ 
-                completed: newStatus,
-                last_completed_at: newStatus ? new Date().toISOString() : null 
+                completed: newStatus, 
+                streak: streak,
+                last_completed_at: newStatus ? new Date().toISOString() : null
             }).eq('id', id);
-            
             fetchTasks();
         }
 
-function shootPoint(event, points) {
-    const el = document.createElement('div');
-    el.className = 'floating-point';
-    el.innerHTML = `+${points.toFixed(2)}`;
-    
-    // Vị trí bắt đầu (tại nơi click)
-    const startX = event.clientX;
-    const startY = event.clientY;
-    
-    el.style.left = `${startX}px`;
-    el.style.top = `${startY}px`;
-    el.style.opacity = '1';
-    document.body.appendChild(el);
-
-    // Lấy tọa độ mục tiêu (Tổng điểm)
-    const target = document.getElementById('total-score-mobile');
-    const targetRect = target.getBoundingClientRect();
-    
-    // Tọa độ giữa màn hình
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-
-    // Giai đoạn 1: Bay ra giữa màn hình và phóng to
-    setTimeout(() => {
-        el.style.left = `${centerX}px`;
-        el.style.top = `${centerY}px`;
-        el.style.transform = 'translate(-50%, -50%) scale(4)'; // Phóng to gấp 4 lần
-        el.style.fontSize = '2rem';
-        el.style.color = '#10b981'; // Đổi sang màu xanh lá khi to nhất
-    }, 50);
-
-    // Giai đoạn 2: Sau khi dừng ở giữa một chút, bay về đích và thu nhỏ
-    setTimeout(() => {
-        el.style.transition = 'all 0.7s cubic-bezier(0.55, 0, 1, 0.45)'; // Đổi tốc độ bay về
-        el.style.left = `${targetRect.left + 20}px`;
-        el.style.top = `${targetRect.top + 10}px`;
-        el.style.transform = 'scale(0.1)';
-        el.style.opacity = '0';
-    }, 700); // Đợi 0.7 giây ở giữa màn hình để người dùng kịp nhìn
-
-    // Giai đoạn 3: Khi chạm đích, rung tổng điểm và xóa element
-    setTimeout(() => {
-        el.remove();
-        target.classList.add('bump-animation');
-        setTimeout(() => target.classList.remove('bump-animation'), 400);
-    }, 1400);
-}
-
-        function animateNumber(el, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                el.innerHTML = (progress * (end - start) + start).toFixed(2);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
+        // Yêu cầu 10: Vô cực (is_recurring)
+        async function toggleInfinity(id, current) {
+            await client.from('tasks').update({ is_recurring: !current }).eq('id', id);
+            fetchTasks();
         }
 
         async function deleteTask(id) {
-            if(confirm('Xóa task này?')) {
+            if (confirm('Xóa task này?')) {
                 await client.from('tasks').delete().eq('id', id);
                 fetchTasks();
             }
         }
 
-        async function toggleRecurring(id, current) {
-            await client.from('tasks').update({ is_recurring: !current }).eq('id', id);
-            fetchTasks();
-        }
-
+        // Yêu cầu 10: Task UI mới (X hiện sẵn, Infinity, Font to)
         function render() {
-            const today = new Date().toISOString().split('T')[0];
-            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-            
-            // Render Active Tasks
             const activeList = document.getElementById('active-tasks');
             const completedList = document.getElementById('completed-tasks');
-            
-            let filtered = allTasks.filter(t => {
-                if (currentTab === 'today') return t.task_date <= today;
-                if (currentTab === 'tomorrow') return t.task_date === tomorrow;
-                return false;
-            });
+            const today = new Date().toISOString().split('T')[0];
 
-            const taskHTML = (t) => `
+            const taskHTML = t => `
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div class="flex items-center gap-4 flex-1">
                         <input type="checkbox" ${t.completed ? 'checked' : ''} 
-                            onclick="toggleTask(${t.id}, ${t.completed}, ${t.streak}, ${t.priority}, event)" 
-                            class="cb-custom cb-p${t.priority} shrink-0">
+                            onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
+                            class="cb-custom">
                         <div class="flex flex-col">
-                            <span class="task-text ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
-                            <span class="text-[10px] text-indigo-400 font-bold">Hệ số: x${Math.pow(1.001, t.streak).toFixed(4)}</span>
+                            <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
+                            <span class="text-[10px] text-indigo-500 font-bold uppercase">Hệ số: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="toggleRecurring(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} text-lg">
-                            <i class="fas fa-infinity"></i>
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'}">
+                            <i class="fas fa-infinity text-lg"></i>
                         </button>
-                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400"><i class="fas fa-times"></i></button>
+                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500 transition">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
                     </div>
                 </div>
             `;
 
+            const filtered = allTasks.filter(t => t.task_date <= today);
             activeList.innerHTML = filtered.filter(t => !t.completed).map(taskHTML).join('');
             completedList.innerHTML = filtered.filter(t => t.completed).map(taskHTML).join('');
             document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
 
-            // Render Achievements (Yêu cầu 7)
+            // Yêu cầu 7: Achievements (Sắp xếp theo số lần làm nhiều nhất)
             if (currentTab === 'achievements') {
-                const summary = allTasks.reduce((acc, t) => {
-                    if (t.completed) {
-                        if (!acc[t.text]) acc[t.text] = { count: 0, streak: t.streak, priority: t.priority };
-                        acc[t.text].count++;
-                        acc[t.text].streak = Math.max(acc[t.text].streak, t.streak);
-                    }
+                const stats = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                    if (!acc[t.text]) acc[t.text] = { count: 0, streak: t.streak };
+                    acc[t.text].count++;
+                    acc[t.text].streak = Math.max(acc[t.text].streak, t.streak);
                     return acc;
                 }, {});
 
-                const sorted = Object.entries(summary).sort((a, b) => b[1].count - a[1].count);
+                const sorted = Object.entries(stats).sort((a, b) => b[1].count - a[1].count);
                 document.getElementById('achievement-list').innerHTML = sorted.map(([text, data]) => `
-                    <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-gray-700">${text}</span>
-                            <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold">${data.count} lần</span>
+                    <div class="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center border-l-4 border-indigo-500">
+                        <div>
+                            <p class="font-bold text-gray-800">${text}</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">Max Hệ Số: x${Math.pow(1.001, data.streak).toFixed(4)}</p>
                         </div>
-                        <p class="text-[11px] text-gray-400 mt-1">Hệ số nhân hiện tại: <span class="text-indigo-400">x${Math.pow(1.001, data.streak).toFixed(4)}</span></p>
+                        <div class="bg-indigo-50 text-indigo-600 font-extrabold px-3 py-1 rounded-lg">${data.count} Lần</div>
                     </div>
                 `).join('');
             }
+        }
+
+        // Logic đồng bộ ngày mới & Xử lý streak 14 ngày (Yêu cầu 5)
+        async function dailySync() {
+            const today = new Date().toISOString().split('T')[0];
+            const updates = [];
+            
+            allTasks.forEach(t => {
+                // Tự động chuyển task chưa xong sang ngày mới
+                if (!t.completed && t.task_date < today) {
+                    updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
+                }
+                // Nếu quá 14 ngày không làm, trừ 1 streak
+                if (t.last_completed_at) {
+                    const diff = (new Date(today) - new Date(t.last_completed_at)) / (1000*60*60*24);
+                    if (diff > 14 && t.streak > 0) {
+                        updates.push(client.from('tasks').update({ streak: t.streak - 1 }).eq('id', t.id));
+                    }
+                }
+            });
+            if (updates.length > 0) await Promise.all(updates);
+        }
+
+        function animateNumber(id, val) {
+            const el = document.getElementById(id);
+            const start = parseFloat(el.innerText);
+            const duration = 1000;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                el.innerText = (progress * (val - start) + start).toFixed(2);
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
         }
 
         function switchTab(tab) {
@@ -309,29 +297,32 @@ function shootPoint(event, points) {
             render();
         }
 
-        function toggleCompletedList() {
-            const list = document.getElementById('completed-tasks');
-            const chevron = document.getElementById('chevron');
-            list.classList.toggle('hidden');
-            chevron.style.transform = list.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
-        }
-
-        async function addNewTaskPrompt() {
-            const text = prompt("Nhập nhiệm vụ mới:");
+        async function addNewTask() {
+            const text = prompt("Nhiệm vụ mới:");
             if (!text) return;
-            const priority = prompt("Mức độ (1:Cao, 2:Trung, 3:Thấp, 4:Không):", "4");
-            const targetDate = currentTab === 'tomorrow' ? new Date(Date.now() + 86400000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            
+            const p = prompt("Độ ưu tiên (1: 4đ, 2: 3đ, 3: 2đ, 4: 1đ):", "4");
             await client.from('tasks').insert([{ 
-                text: text, 
-                priority: parseInt(priority) || 4, 
-                task_date: targetDate,
+                text, 
+                priority: parseInt(p) || 4, 
+                task_date: new Date().toISOString().split('T')[0],
                 streak: 0
             }]);
             fetchTasks();
         }
 
-        window.onload = fetchTasks;
+        window.onload = async () => {
+            await fetchTasks();
+            await dailySync();
+        };
+
+        // Yêu cầu 8: Mốc huy chương (3 tháng = 90 ngày = ~2100 điểm biểu mẫu)
+        function updateRankAndMedal(score) {
+            const titleEl = document.getElementById('rank-title');
+            if (score > 10000) titleEl.innerText = "Bậc Thầy (1 Năm)";
+            else if (score > 5000) titleEl.innerText = "Chiến Binh (6 Tháng)";
+            else if (score > 2100) titleEl.innerText = "Kỷ Luật (3 Tháng)";
+            else titleEl.innerText = "Khởi Hành";
+        }
     </script>
 </body>
 </html>
