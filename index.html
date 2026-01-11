@@ -87,10 +87,10 @@
     </main>
 
     <nav class="bottom-nav">
-        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex flex-col items-center">
-            <i class="fas fa-bolt text-lg"></i><span class="text-[10px] font-bold mt-1">TODAY</span>
+        <button onclick="switchTab('getLocalDateString(0)')" id="btn-getLocalDateString(0)" class="nav-item active flex flex-col items-center">
+            <i class="fas fa-bolt text-lg"></i><span class="text-[10px] font-bold mt-1">getLocalDateString(0)</span>
         </button>
-        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center">
+        <button onclick="switchTab('getLocalDateString(1)')" id="btn-getLocalDateString(1)" class="nav-item flex flex-col items-center">
             <i class="fas fa-calendar-alt text-lg"></i><span class="text-[10px] font-bold mt-1">NEXT</span>
         </button>
         <button onclick="addNewTask()" class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white active:scale-90 transition">
@@ -107,8 +107,16 @@
         const client = supabase.createClient(SB_URL, SB_KEY);
 
         let allTasks = [];
-        let currentTab = 'today';
+        let currentTab = 'getLocalDateString(0)';
 
+        // Hàm hỗ trợ lấy chuỗi YYYY-MM-DD theo giờ địa phương
+function getLocalDateString(offsetDays = 0) {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+}
         // 4. Exponential Formula: $pts = base \times 1.001^n$
         function getPoints(priority, streak) {
             const base = { 1: 4, 2: 3, 3: 2, 4: 1 };
@@ -125,11 +133,11 @@
         }
 
         function updateGlobalUI() {
-            const today = new Date().toISOString().split('T')[0];
+            const getLocalDateString(0) = getLocalDateString(0);
             const total = allTasks.reduce((sum, t) => {
                 const p = getPoints(t.priority, t.streak);
                 if (t.completed) return sum + p;
-                if (t.task_date < today) return sum - p;
+                if (t.task_date < getLocalDateString(0)) return sum - p;
                 return sum;
             }, 0);
             
@@ -204,8 +212,8 @@
         function render() {
             const activeList = document.getElementById('active-tasks');
             const completedList = document.getElementById('completed-tasks');
-            const today = new Date().toISOString().split('T')[0];
-            const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const getLocalDateString(0) = getLocalDateString(0);
+            const getLocalDateString(1) = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
             const taskHTML = t => `
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
@@ -225,8 +233,8 @@
                 </div>`;
 
             const filtered = allTasks.filter(t => {
-                if (currentTab === 'today') return t.task_date <= today;
-                if (currentTab === 'tomorrow') return t.task_date === tomorrow;
+                if (currentTab === 'getLocalDateString(0)') return t.task_date <= getLocalDateString(0);
+                if (currentTab === 'getLocalDateString(1)') return t.task_date === getLocalDateString(1);
                 return true;
             });
 
@@ -252,20 +260,20 @@
         }
 
         async function syncLogic() {
-            const today = new Date().toISOString().split('T')[0];
+            const getLocalDateString(0) = getLocalDateString(0);
             const updates = [];
             const inserts = [];
 
             allTasks.forEach(t => {
                 // Carry over uncompleted tasks
-                if (!t.completed && t.task_date < today) {
-                    updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
+                if (!t.completed && t.task_date < getLocalDateString(0)) {
+                    updates.push(client.from('tasks').update({ task_date: getLocalDateString(0) }).eq('id', t.id));
                 }
-                // Infinity logic: If recurring and no task today, create it
-                if (t.is_recurring && t.task_date < today) {
-                    const hasToday = allTasks.some(x => x.text === t.text && x.task_date === today);
-                    if (!hasToday) {
-                        inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: today, streak: t.streak, is_recurring: true }]));
+                // Infinity logic: If recurring and no task getLocalDateString(0), create it
+                if (t.is_recurring && t.task_date < getLocalDateString(0)) {
+                    const hasgetLocalDateString(0) = allTasks.some(x => x.text === t.text && x.task_date === getLocalDateString(0));
+                    if (!hasgetLocalDateString(0)) {
+                        inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: getLocalDateString(0), streak: t.streak, is_recurring: true }]));
                     }
                 }
             });
@@ -284,13 +292,22 @@
             render();
         }
 
-        async function addNewTask() {
-            const text = prompt("Nhiệm vụ mới:"); if (!text) return;
-            const p = prompt("Độ ưu tiên (1-4):", "4");
-            const date = currentTab === 'tomorrow' ? new Date(Date.now() + 86400000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            await client.from('tasks').insert([{ text, priority: parseInt(p) || 4, task_date: date, streak: 0 }]);
-            fetchTasks();
-        }
+async function addNewTask() {
+    const text = prompt("Nhiệm vụ mới:");
+    if (!text) return;
+    const p = prompt("Độ ưu tiên (1-4):", "4");
+    
+    // Sử dụng hàm getLocalDateString mới
+    const date = (currentTab === 'getLocalDateString(1)') ? getLocalDateString(1) : getLocalDateString(0);
+    
+    await client.from('tasks').insert([{ 
+        text, 
+        priority: parseInt(p) || 4, 
+        task_date: date, 
+        streak: 0 
+    }]);
+    fetchTasks();
+}
 
         function animateNumber(id, val) {
             const el = document.getElementById(id);
