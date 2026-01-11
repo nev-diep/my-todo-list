@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>0.1% Discipline Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -14,7 +14,7 @@
         
         /* 1, 3. Header & Medal Slot */
         .score-header {
-            position: fixed; top: 0; left: 0; right: 0; height: 75px;
+            position: fixed; top: 0; left: 0; right: 0; height: 80px;
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; z-index: 1000; border-bottom: 1px solid #e5e7eb;
@@ -28,17 +28,17 @@
             font-size: 1.2rem; opacity: 0;
         }
 
-        /* 9. Font size */
-        .task-name { font-size: 1.1rem; font-weight: 600; line-height: 1.2; }
+        /* 9. Font size bigger */
+        .task-name { font-size: 1.1rem; font-weight: 600; line-height: 1.3; }
 
-        .cb-custom { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #d1d5db; appearance: none; position: relative; cursor: pointer; flex-shrink: 0; }
+        .cb-custom { width: 26px; height: 26px; border-radius: 8px; border: 2px solid #d1d5db; appearance: none; position: relative; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
         .cb-custom:checked { background-color: #10b981; border-color: #10b981; }
-        .cb-custom:checked::after { content: '✓'; color: white; position: absolute; left: 5px; top: -1px; font-size: 16px; }
+        .cb-custom:checked::after { content: '✓'; color: white; position: absolute; left: 6px; top: 0px; font-size: 16px; font-weight: bold; }
 
         .bump-animation { animation: bump 0.4s ease-out; }
-        @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); color: #10b981; } }
+        @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); color: #10b981; } }
 
-        main { padding: 95px 16px 100px 16px; max-width: 600px; margin: 0 auto; }
+        main { padding: 100px 16px 110px 16px; max-width: 600px; margin: 0 auto; }
         
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
@@ -46,7 +46,7 @@
             display: flex; justify-content: space-around; align-items: center; z-index: 1000;
             padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-item { color: #9ca3af; transition: all 0.2s; }
+        .nav-item { color: #9ca3af; transition: all 0.2s; background: none; border: none; cursor: pointer; }
         .nav-item.active { color: #4f46e5; }
     </style>
 </head>
@@ -54,109 +54,105 @@
 
     <header class="score-header">
         <div class="flex items-center gap-3">
-            <div id="medal-container" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                <i class="fas fa-certificate text-gray-300"></i>
+            <div id="medal-container" class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                <i class="fas fa-medal text-indigo-400"></i>
             </div>
             <div>
-                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Progress</p>
-                <h1 id="total-score" class="text-2xl font-extrabold text-indigo-600 leading-none">0</h1>
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-tight">Discipline Score</p>
+                <h1 id="total-score" class="text-2xl font-extrabold text-gray-800 leading-none">0</h1>
             </div>
         </div>
         <div class="text-right">
-            <p id="rank-title" class="text-[10px] font-bold text-gray-400 uppercase">Khởi Đầu</p>
+            <p id="rank-title" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full uppercase">ĐANG TÍNH...</p>
         </div>
     </header>
 
     <main>
         <div id="task-view">
+            <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
             <div id="active-tasks" class="space-y-3"></div>
 
             <details class="mt-8 group" id="completed-section">
-                <summary class="flex items-center gap-2 text-gray-400 font-medium cursor-pointer list-none bg-gray-50 p-3 rounded-xl select-none">
-                    <i class="fas fa-chevron-right transition-transform group-open:rotate-90"></i>
-                    <span>Đã xong (<span id="completed-count">0</span>)</span>
+                <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-100/50 p-3 rounded-xl select-none">
+                    <i class="fas fa-chevron-right transition-transform group-open:rotate-90 text-[10px]"></i>
+                    <span>ĐÃ XONG (<span id="completed-count">0</span>)</span>
                 </summary>
                 <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
             </details>
         </div>
 
         <div id="achievements-view" class="hidden">
-            <h2 class="text-lg font-extrabold mb-4">Lịch sử rèn luyện</h2>
+            <h2 class="text-lg font-extrabold mb-5">Thành Tựu Kỷ Luật</h2>
             <div id="achievement-list" class="space-y-3"></div>
         </div>
     </main>
 
     <nav class="bottom-nav">
-        <button onclick="switchTab('getLocalDateString(0)')" id="btn-getLocalDateString(0)" class="nav-item active flex flex-col items-center">
-            <i class="fas fa-bolt text-lg"></i><span class="text-[10px] font-bold mt-1">getLocalDateString(0)</span>
+        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex flex-col items-center">
+            <i class="fas fa-calendar-check text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Today</span>
         </button>
-        <button onclick="switchTab('getLocalDateString(1)')" id="btn-getLocalDateString(1)" class="nav-item flex flex-col items-center">
-            <i class="fas fa-calendar-alt text-lg"></i><span class="text-[10px] font-bold mt-1">NEXT</span>
+        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center">
+            <i class="fas fa-calendar-plus text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Next</span>
         </button>
-        <button onclick="addNewTask()" class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white active:scale-90 transition">
+        <button onclick="addNewTask()" class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg -mt-10 border-4 border-white active:scale-90 transition shadow-indigo-200">
             <i class="fas fa-plus"></i>
         </button>
         <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex flex-col items-center">
-            <i class="fas fa-trophy text-lg"></i><span class="text-[10px] font-bold mt-1">RANKS</span>
+            <i class="fas fa-award text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Ranks</span>
         </button>
     </nav>
 
     <script>
-        const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
+        const SB_URL = 'YOUR_SUPABASE_URL';
+        const SB_KEY = 'YOUR_SUPABASE_KEY';
         const client = supabase.createClient(SB_URL, SB_KEY);
 
         let allTasks = [];
-        let currentTab = 'getLocalDateString(0)';
-function getLocalDateString(offsetDays = 0) {
-    const d = new Date();
-    d.setDate(d.getDate() + offsetDays);
-    return d.getFullYear() + '-' + 
-           String(d.getMonth() + 1).padStart(2, '0') + '-' + 
-           String(d.getDate()).padStart(2, '0');
-}
-        // Hàm hỗ trợ lấy chuỗi YYYY-MM-DD theo giờ địa phương
-function getLocalDateString(offsetDays = 0) {
-    const date = new Date();
-    date.setDate(date.getDate() + offsetDays);
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-    return localDate.toISOString().split('T')[0];
-}
-        // 4. Exponential Formula: $pts = base \times 1.001^n$
-        function getPoints(priority, streak) {
-            const base = { 1: 4, 2: 3, 3: 2, 4: 1 };
-            return base[priority || 4] * Math.pow(1.001, streak || 0);
+        let currentTab = 'today';
+
+        // Lấy ngày chuẩn VN (Yêu cầu fix lỗi tạo nhầm ngày)
+        function getLocalYYYYMMDD(offset = 0) {
+            const d = new Date();
+            d.setDate(d.getDate() + offset);
+            return d.getFullYear() + '-' + 
+                   String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(d.getDate()).padStart(2, '0');
+        }
+
+        // 4. Exponential Formula: 1.001^n
+        function calculatePoints(priority, streak) {
+            const baseMap = { 1: 4, 2: 3, 3: 2, 4: 1 };
+            return baseMap[priority || 4] * Math.pow(1.001, streak || 0);
         }
 
         async function fetchTasks() {
             const { data, error } = await client.from('tasks').select('*');
-            if (!error) {
-                allTasks = data || [];
-                updateGlobalUI();
-                render();
-            }
+            if (error) { console.error(error); return; }
+            allTasks = data || [];
+            updateHeader();
+            render();
         }
 
-        function updateGlobalUI() {
-            const getLocalDateString(0) = getLocalDateString(0);
-            const total = allTasks.reduce((sum, t) => {
-                const p = getPoints(t.priority, t.streak);
+        function updateHeader() {
+            const today = getLocalYYYYMMDD(0);
+            const totalScore = allTasks.reduce((sum, t) => {
+                const p = calculatePoints(t.priority, t.streak);
                 if (t.completed) return sum + p;
-                if (t.task_date < getLocalDateString(0)) return sum - p;
+                if (t.task_date < today) return sum - p;
                 return sum;
             }, 0);
             
-            animateNumber('total-score', total);
+            animateNumber('total-score', totalScore);
 
-            // 8. 3-Month Rank milestones
-            const rankEl = document.getElementById('rank-title');
-            if (total > 2100) rankEl.innerText = "KỶ LUẬT (3 THÁNG)";
-            else if (total > 500) rankEl.innerText = "BỀN BỈ (1 THÁNG)";
-            else rankEl.innerText = "TẬP SỰ";
+            // 8. Rank milestones
+            const rankTitle = document.getElementById('rank-title');
+            if (totalScore > 2100) rankTitle.innerText = "KỶ LUẬT (3 THÁNG)";
+            else if (totalScore > 500) rankTitle.innerText = "BỀN BỈ (1 THÁNG)";
+            else if (totalScore > 0) rankTitle.innerText = "TẬP SỰ";
+            else rankTitle.innerText = "KHỞI ĐẦU";
         }
 
-        // 2. Point Flying Animation
+        // 2. Point Animation
         function shootPoint(e, points) {
             const el = document.createElement('div');
             el.className = 'floating-point';
@@ -166,8 +162,7 @@ function getLocalDateString(offsetDays = 0) {
             el.style.opacity = '1';
             document.body.appendChild(el);
 
-            const scoreEl = document.getElementById('total-score');
-            const rect = scoreEl.getBoundingClientRect();
+            const scoreContainer = document.getElementById('total-score').parentElement;
 
             setTimeout(() => {
                 el.style.left = '50%'; el.style.top = '50%';
@@ -176,114 +171,125 @@ function getLocalDateString(offsetDays = 0) {
             }, 50);
 
             setTimeout(() => {
-                el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
-                el.style.transform = 'scale(0.1)'; el.style.opacity = '0';
+                const rect = document.getElementById('total-score').getBoundingClientRect();
+                el.style.left = rect.left + 'px';
+                el.style.top = rect.top + 'px';
+                el.style.transform = 'scale(0.1)';
+                el.style.opacity = '0';
             }, 850);
 
             setTimeout(() => { 
                 el.remove();
-                scoreEl.parentElement.classList.add('bump-animation');
-                setTimeout(() => scoreEl.parentElement.classList.remove('bump-animation'), 400);
+                scoreContainer.classList.add('bump-animation');
+                setTimeout(() => scoreContainer.classList.remove('bump-animation'), 400);
             }, 1500);
         }
 
-        // 5. Streak Logic
         async function toggleTask(id, status, priority, streak, e) {
-            const newStatus = !status;
-            if (newStatus) {
-                shootPoint(e, getPoints(priority, streak));
-                streak = (streak || 0) + 1;
+            const isChecking = !status;
+            if (isChecking) {
+                shootPoint(e, calculatePoints(priority, streak));
+                streak = (streak || 0) + 1; // 5. Tăng streak
             }
             await client.from('tasks').update({ 
-                completed: newStatus, 
+                completed: isChecking, 
                 streak: streak,
-                last_completed_at: newStatus ? new Date().toISOString() : null
+                last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null
             }).eq('id', id);
             fetchTasks();
         }
 
-        // 10. Infinity Toggle
-        async function toggleInfinity(id, current) {
-            await client.from('tasks').update({ is_recurring: !current }).eq('id', id);
+        async function toggleInfinity(id, currentStatus) {
+            await client.from('tasks').update({ is_recurring: !currentStatus }).eq('id', id);
             fetchTasks();
         }
 
         async function deleteTask(id) {
-            if (confirm('Xóa task này?')) {
+            if (confirm('Xóa nhiệm vụ này?')) {
                 await client.from('tasks').delete().eq('id', id);
                 fetchTasks();
             }
         }
 
         function render() {
-            const activeList = document.getElementById('active-tasks');
-            const completedList = document.getElementById('completed-tasks');
-            const getLocalDateString(0) = getLocalDateString(0);
-            const getLocalDateString(1) = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const activeDiv = document.getElementById('active-tasks');
+            const completedDiv = document.getElementById('completed-tasks');
+            const today = getLocalYYYYMMDD(0);
+            const tomorrow = getLocalYYYYMMDD(1);
 
-            const taskHTML = t => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            const taskItemHTML = t => `
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
                     <div class="flex items-center gap-4 flex-1">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" class="cb-custom">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} 
+                            onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
+                            class="cb-custom">
                         <div class="flex flex-col">
                             <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
-                            <span class="text-[9px] text-indigo-400 font-bold">HỆ SỐ: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
+                            <span class="text-[9px] text-indigo-500 font-bold tracking-tight">HỆ SỐ: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'}">
+                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} p-1">
                             <i class="fas fa-infinity text-lg"></i>
                         </button>
-                        <button onclick="deleteTask(${t.id})" class="text-gray-300 px-1">✕</button>
+                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 p-1">✕</button>
                     </div>
                 </div>`;
 
-            const filtered = allTasks.filter(t => {
-                if (currentTab === 'getLocalDateString(0)') return t.task_date <= getLocalDateString(0);
-                if (currentTab === 'getLocalDateString(1)') return t.task_date === getLocalDateString(1);
+            const filteredTasks = allTasks.filter(t => {
+                if (currentTab === 'today') return t.task_date <= today;
+                if (currentTab === 'tomorrow') return t.task_date === tomorrow;
                 return true;
             });
 
-            activeList.innerHTML = filtered.filter(t => !t.completed).map(taskHTML).join('');
-            completedList.innerHTML = filtered.filter(t => t.completed).map(taskHTML).join('');
-            document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
+            const activeOnes = filteredTasks.filter(t => !t.completed);
+            const doneOnes = filteredTasks.filter(t => t.completed);
 
-            // 7. Achievement Tab sorting
+            activeDiv.innerHTML = activeOnes.length ? activeOnes.map(taskItemHTML).join('') : '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi, nghỉ ngơi thôi!</p>';
+            completedDiv.innerHTML = doneOnes.map(taskItemHTML).join('');
+            document.getElementById('completed-count').innerText = doneOnes.length;
+
             if (currentTab === 'achievements') {
-                const stats = allTasks.filter(t => t.completed).reduce((acc, t) => {
-                    acc[t.text] = acc[t.text] || { count: 0, streak: 0 };
-                    acc[t.text].count++;
-                    acc[t.text].streak = Math.max(acc[t.text].streak, t.streak);
+                const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                    acc[t.text] = acc[t.text] || { total: 0, maxStreak: 0 };
+                    acc[t.text].total++;
+                    acc[t.text].maxStreak = Math.max(acc[t.text].maxStreak, t.streak);
                     return acc;
                 }, {});
-                const sorted = Object.entries(stats).sort((a,b) => b[1].count - a[1].count);
-                document.getElementById('achievement-list').innerHTML = sorted.map(([text, data]) => `
-                    <div class="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center border-l-4 border-indigo-500">
-                        <div><p class="font-bold text-sm">${text}</p><p class="text-[9px] text-gray-400 uppercase font-bold">Max Hệ Số: x${Math.pow(1.001, data.streak).toFixed(4)}</p></div>
-                        <div class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1 rounded-lg">${data.count}x</div>
+                
+                const sortedList = Object.entries(summary).sort((a,b) => b[1].total - a[1].total);
+                document.getElementById('achievement-list').innerHTML = sortedList.map(([name, data]) => `
+                    <div class="bg-white p-4 rounded-xl flex justify-between items-center border-l-4 border-indigo-500 shadow-sm">
+                        <div>
+                            <p class="font-bold text-sm text-gray-800">${name}</p>
+                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">Hệ số đạt được: x${Math.pow(1.001, data.maxStreak).toFixed(4)}</p>
+                        </div>
+                        <div class="bg-indigo-50 text-indigo-600 font-black px-3 py-1 rounded-lg text-sm">${data.total}x</div>
                     </div>`).join('');
             }
         }
 
-        async function syncLogic() {
-            const getLocalDateString(0) = getLocalDateString(0);
+        async function runDailySync() {
+            const today = getLocalYYYYMMDD(0);
             const updates = [];
             const inserts = [];
 
             allTasks.forEach(t => {
-                // Carry over uncompleted tasks
-                if (!t.completed && t.task_date < getLocalDateString(0)) {
-                    updates.push(client.from('tasks').update({ task_date: getLocalDateString(0) }).eq('id', t.id));
+                // 1. Task chưa xong từ hôm qua -> Chuyển sang hôm nay
+                if (!t.completed && t.task_date < today) {
+                    updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
                 }
-                // Infinity logic: If recurring and no task getLocalDateString(0), create it
-                if (t.is_recurring && t.task_date < getLocalDateString(0)) {
-                    const hasgetLocalDateString(0) = allTasks.some(x => x.text === t.text && x.task_date === getLocalDateString(0));
-                    if (!hasgetLocalDateString(0)) {
-                        inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: getLocalDateString(0), streak: t.streak, is_recurring: true }]));
+                // 2. Task Vô cực -> Nếu hôm nay chưa có thì tạo bản sao
+                if (t.is_recurring && t.task_date < today) {
+                    const alreadyExistsToday = allTasks.some(x => x.text === t.text && x.task_date === today);
+                    if (!alreadyExistsToday) {
+                        inserts.push(client.from('tasks').insert([{ 
+                            text: t.text, priority: t.priority, task_date: today, streak: t.streak, is_recurring: true 
+                        }]));
                     }
                 }
             });
-            if (updates.length > 0 || inserts.length > 0) {
+            if (updates.length || inserts.length) {
                 await Promise.all([...updates, ...inserts]);
                 fetchTasks();
             }
@@ -293,45 +299,49 @@ function getLocalDateString(offsetDays = 0) {
             currentTab = tab;
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('btn-' + tab).classList.add('active');
-            document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
-            document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
+            
+            const isAchiev = tab === 'achievements';
+            document.getElementById('task-view').classList.toggle('hidden', isAchiev);
+            document.getElementById('achievements-view').classList.toggle('hidden', !isAchiev);
+            
+            if (!isAchiev) {
+                document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'NGÀY MAI';
+            }
             render();
         }
 
-async function addNewTask() {
-    const text = prompt("Nhiệm vụ mới:");
-    if (!text) return;
-    const p = prompt("Độ ưu tiên (1-4):", "4");
-    
-    // Sử dụng hàm getLocalDateString mới
-    const date = (currentTab === 'getLocalDateString(1)') ? getLocalDateString(1) : getLocalDateString(0);
-    
-    await client.from('tasks').insert([{ 
-        text, 
-        priority: parseInt(p) || 4, 
-        task_date: date, 
-        streak: 0 
-    }]);
-    fetchTasks();
-}
+        async function addNewTask() {
+            const text = prompt("Bạn muốn rèn luyện điều gì?");
+            if (!text) return;
+            const prio = prompt("Độ ưu tiên (1:Khó nhất - 4:Dễ nhất):", "4");
+            const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
+            
+            await client.from('tasks').insert([{ 
+                text, 
+                priority: parseInt(prio) || 4, 
+                task_date: targetDate, 
+                streak: 0 
+            }]);
+            fetchTasks();
+        }
 
         function animateNumber(id, val) {
             const el = document.getElementById(id);
             const start = parseFloat(el.innerText) || 0;
             const duration = 1000;
-            let startTs = null;
-            const step = (ts) => {
-                if (!startTs) startTs = ts;
-                const progress = Math.min((ts - startTs) / duration, 1);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 el.innerText = (progress * (val - start) + start).toFixed(2);
-                if (progress < 1) requestAnimationFrame(step);
+                if (progress < 1) window.requestAnimationFrame(step);
             };
-            requestAnimationFrame(step);
+            window.requestAnimationFrame(step);
         }
 
         window.onload = async () => {
             await fetchTasks();
-            await syncLogic();
+            await runDailySync();
         };
     </script>
 </body>
