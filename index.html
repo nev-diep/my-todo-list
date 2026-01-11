@@ -10,35 +10,35 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; }
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; -webkit-tap-highlight-color: transparent; }
         
-        /* Yêu cầu 1, 3: Header Điểm & Huy chương */
+        /* 1, 3. Header & Medal Slot */
         .score-header {
-            position: fixed; top: 0; left: 0; right: 0; height: 70px;
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            position: fixed; top: 0; left: 0; right: 0; height: 75px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; z-index: 1000; border-bottom: 1px solid #e5e7eb;
+            padding-top: env(safe-area-inset-top);
         }
 
-        /* Yêu cầu 9: Cỡ chữ task to hơn */
-        .task-name { font-size: 1.15rem; font-weight: 600; }
-
-        /* Yêu cầu 2: Hiệu ứng bay điểm */
+        /* 2. Floating Point Animation */
         .floating-point {
             position: fixed; font-weight: 800; color: #4f46e5; pointer-events: none;
             z-index: 9999; transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
             font-size: 1.2rem; opacity: 0;
         }
-        .bump-animation { animation: bump 0.4s ease-out; }
-        @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); color: #10b981; } }
 
-        /* Custom UI */
-        .cb-custom { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #d1d5db; appearance: none; position: relative; cursor: pointer; }
+        /* 9. Font size */
+        .task-name { font-size: 1.1rem; font-weight: 600; line-height: 1.2; }
+
+        .cb-custom { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #d1d5db; appearance: none; position: relative; cursor: pointer; flex-shrink: 0; }
         .cb-custom:checked { background-color: #10b981; border-color: #10b981; }
-        .cb-custom:checked::after { content: '✓'; color: white; position: absolute; left: 4px; top: -2px; font-size: 16px; }
-        .medal-slot { width: 40px; height: 40px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
-        
-        main { padding: 90px 15px 100px 15px; max-width: 600px; margin: 0 auto; }
+        .cb-custom:checked::after { content: '✓'; color: white; position: absolute; left: 5px; top: -1px; font-size: 16px; }
+
+        .bump-animation { animation: bump 0.4s ease-out; }
+        @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); color: #10b981; } }
+
+        main { padding: 95px 16px 100px 16px; max-width: 600px; margin: 0 auto; }
         
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
@@ -46,7 +46,7 @@
             display: flex; justify-content: space-around; align-items: center; z-index: 1000;
             padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-item { display: flex; flex-col; align-items: center; gap: 4px; color: #9ca3af; font-size: 10px; font-weight: bold; }
+        .nav-item { color: #9ca3af; transition: all 0.2s; }
         .nav-item.active { color: #4f46e5; }
     </style>
 </head>
@@ -54,51 +54,50 @@
 
     <header class="score-header">
         <div class="flex items-center gap-3">
-            <div id="medal-container" class="medal-slot">
-                <i class="fas fa-certificate text-gray-200 text-xl"></i>
+            <div id="medal-container" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                <i class="fas fa-certificate text-gray-300"></i>
             </div>
             <div>
-                <p class="text-[10px] font-bold text-gray-400 uppercase">Total Score</p>
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Progress</p>
                 <h1 id="total-score" class="text-2xl font-extrabold text-indigo-600 leading-none">0</h1>
             </div>
         </div>
         <div class="text-right">
-            <p id="rank-title" class="text-[11px] font-bold text-gray-400 uppercase">Đang tính toán...</p>
+            <p id="rank-title" class="text-[10px] font-bold text-gray-400 uppercase">Khởi Đầu</p>
         </div>
     </header>
 
     <main>
         <div id="task-view">
-            <h2 id="view-title" class="text-sm font-bold text-gray-400 uppercase mb-4 ml-2">Hôm nay</h2>
             <div id="active-tasks" class="space-y-3"></div>
 
             <details class="mt-8 group" id="completed-section">
-                <summary class="flex items-center gap-2 text-gray-400 font-medium cursor-pointer list-none bg-gray-50 p-3 rounded-xl">
+                <summary class="flex items-center gap-2 text-gray-400 font-medium cursor-pointer list-none bg-gray-50 p-3 rounded-xl select-none">
                     <i class="fas fa-chevron-right transition-transform group-open:rotate-90"></i>
-                    <span>Hoàn thành (<span id="completed-count">0</span>)</span>
+                    <span>Đã xong (<span id="completed-count">0</span>)</span>
                 </summary>
-                <div id="completed-tasks" class="mt-3 space-y-2 opacity-50"></div>
+                <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
             </details>
         </div>
 
         <div id="achievements-view" class="hidden">
-            <h2 class="text-xl font-extrabold mb-6">Thành Tựu & Hệ Số</h2>
+            <h2 class="text-lg font-extrabold mb-4">Lịch sử rèn luyện</h2>
             <div id="achievement-list" class="space-y-3"></div>
         </div>
     </main>
 
     <nav class="bottom-nav">
-        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex-col">
-            <i class="fas fa-calendar-day text-lg"></i><span>HÔM NAY</span>
+        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex flex-col items-center">
+            <i class="fas fa-bolt text-lg"></i><span class="text-[10px] font-bold mt-1">TODAY</span>
         </button>
-        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex-col">
-            <i class="fas fa-calendar-plus text-lg"></i><span>NGÀY MAI</span>
+        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center">
+            <i class="fas fa-calendar-alt text-lg"></i><span class="text-[10px] font-bold mt-1">NEXT</span>
         </button>
-        <button onclick="addNewTask()" class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white">
+        <button onclick="addNewTask()" class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg -mt-8 border-4 border-white active:scale-90 transition">
             <i class="fas fa-plus"></i>
         </button>
-        <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex-col">
-            <i class="fas fa-trophy text-lg"></i><span>DANH HIỆU</span>
+        <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex flex-col items-center">
+            <i class="fas fa-trophy text-lg"></i><span class="text-[10px] font-bold mt-1">RANKS</span>
         </button>
     </nav>
 
@@ -110,37 +109,40 @@
         let allTasks = [];
         let currentTab = 'today';
 
-        // Yêu cầu 4: Lũy thừa 1.001^n
+        // 4. Exponential Formula: $pts = base \times 1.001^n$
         function getPoints(priority, streak) {
             const base = { 1: 4, 2: 3, 3: 2, 4: 1 };
-            return base[priority] * Math.pow(1.001, streak || 0);
+            return base[priority || 4] * Math.pow(1.001, streak || 0);
         }
 
         async function fetchTasks() {
             const { data, error } = await client.from('tasks').select('*');
             if (!error) {
                 allTasks = data || [];
-                updateScore();
+                updateGlobalUI();
                 render();
             }
         }
 
-        function updateScore() {
+        function updateGlobalUI() {
             const today = new Date().toISOString().split('T')[0];
             const total = allTasks.reduce((sum, t) => {
-                const pts = getPoints(t.priority, t.streak);
-                return t.completed ? sum + pts : (t.task_date < today ? sum - pts : sum);
+                const p = getPoints(t.priority, t.streak);
+                if (t.completed) return sum + p;
+                if (t.task_date < today) return sum - p;
+                return sum;
             }, 0);
             
             animateNumber('total-score', total);
-            // Cập nhật Rank dựa trên mốc 3 tháng (biểu mẫu 2100đ)
+
+            // 8. 3-Month Rank milestones
             const rankEl = document.getElementById('rank-title');
-            if (score > 860000) rankEl.innerText = "THÁI TỐ (10 NĂM)";
-            else if (score > 2100) rankEl.innerText = "KỶ LUẬT (3 THÁNG)";
-            else rankEl.innerText = "KHỞI HÀNH";
+            if (total > 2100) rankEl.innerText = "KỶ LUẬT (3 THÁNG)";
+            else if (total > 500) rankEl.innerText = "BỀN BỈ (1 THÁNG)";
+            else rankEl.innerText = "TẬP SỰ";
         }
 
-        // Yêu cầu 2: Bay điểm qua giữa màn hình
+        // 2. Point Flying Animation
         function shootPoint(e, points) {
             const el = document.createElement('div');
             el.className = 'floating-point';
@@ -162,28 +164,31 @@
             setTimeout(() => {
                 el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
                 el.style.transform = 'scale(0.1)'; el.style.opacity = '0';
-            }, 800);
+            }, 850);
 
-            setTimeout(() => {
+            setTimeout(() => { 
                 el.remove();
-                scoreEl.classList.add('bump-animation');
-                setTimeout(() => scoreEl.classList.remove('bump-animation'), 400);
-            }, 1400);
+                scoreEl.parentElement.classList.add('bump-animation');
+                setTimeout(() => scoreEl.parentElement.classList.remove('bump-animation'), 400);
+            }, 1500);
         }
 
+        // 5. Streak Logic
         async function toggleTask(id, status, priority, streak, e) {
             const newStatus = !status;
             if (newStatus) {
                 shootPoint(e, getPoints(priority, streak));
-                streak = (streak || 0) + 1; // Tăng streak
+                streak = (streak || 0) + 1;
             }
             await client.from('tasks').update({ 
-                completed: newStatus, streak: streak,
+                completed: newStatus, 
+                streak: streak,
                 last_completed_at: newStatus ? new Date().toISOString() : null
             }).eq('id', id);
             fetchTasks();
         }
 
+        // 10. Infinity Toggle
         async function toggleInfinity(id, current) {
             await client.from('tasks').update({ is_recurring: !current }).eq('id', id);
             fetchTasks();
@@ -202,36 +207,34 @@
             const today = new Date().toISOString().split('T')[0];
             const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
-            // Logic Tab (Today/Tomorrow)
+            const taskHTML = t => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-4 flex-1">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" class="cb-custom">
+                        <div class="flex flex-col">
+                            <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
+                            <span class="text-[9px] text-indigo-400 font-bold">HỆ SỐ: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'}">
+                            <i class="fas fa-infinity text-lg"></i>
+                        </button>
+                        <button onclick="deleteTask(${t.id})" class="text-gray-300 px-1">✕</button>
+                    </div>
+                </div>`;
+
             const filtered = allTasks.filter(t => {
                 if (currentTab === 'today') return t.task_date <= today;
                 if (currentTab === 'tomorrow') return t.task_date === tomorrow;
                 return true;
             });
 
-            // Yêu cầu 10: Task UI (X hiện sẵn, Infinity, Không nút push)
-            const html = t => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div class="flex items-center gap-4 flex-1">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" class="cb-custom">
-                        <div class="flex flex-col">
-                            <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
-                            <span class="text-[9px] text-indigo-500 font-bold uppercase">Hệ số: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'}">
-                            <i class="fas fa-infinity"></i>
-                        </button>
-                        <button onclick="deleteTask(${t.id})" class="text-gray-300">✕</button>
-                    </div>
-                </div>`;
-
-            activeList.innerHTML = filtered.filter(t => !t.completed).map(html).join('');
-            completedList.innerHTML = filtered.filter(t => t.completed).map(html).join('');
+            activeList.innerHTML = filtered.filter(t => !t.completed).map(taskHTML).join('');
+            completedList.innerHTML = filtered.filter(t => t.completed).map(taskHTML).join('');
             document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
 
-            // Yêu cầu 7: Achievements View
+            // 7. Achievement Tab sorting
             if (currentTab === 'achievements') {
                 const stats = allTasks.filter(t => t.completed).reduce((acc, t) => {
                     acc[t.text] = acc[t.text] || { count: 0, streak: 0 };
@@ -242,9 +245,33 @@
                 const sorted = Object.entries(stats).sort((a,b) => b[1].count - a[1].count);
                 document.getElementById('achievement-list').innerHTML = sorted.map(([text, data]) => `
                     <div class="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center border-l-4 border-indigo-500">
-                        <div><p class="font-bold text-sm">${text}</p><p class="text-[9px] text-gray-400">HỆ SỐ MAX: x${Math.pow(1.001, data.streak).toFixed(4)}</p></div>
-                        <div class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1 rounded-lg">${data.count} Lần</div>
+                        <div><p class="font-bold text-sm">${text}</p><p class="text-[9px] text-gray-400 uppercase font-bold">Max Hệ Số: x${Math.pow(1.001, data.streak).toFixed(4)}</p></div>
+                        <div class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1 rounded-lg">${data.count}x</div>
                     </div>`).join('');
+            }
+        }
+
+        async function syncLogic() {
+            const today = new Date().toISOString().split('T')[0];
+            const updates = [];
+            const inserts = [];
+
+            allTasks.forEach(t => {
+                // Carry over uncompleted tasks
+                if (!t.completed && t.task_date < today) {
+                    updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
+                }
+                // Infinity logic: If recurring and no task today, create it
+                if (t.is_recurring && t.task_date < today) {
+                    const hasToday = allTasks.some(x => x.text === t.text && x.task_date === today);
+                    if (!hasToday) {
+                        inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: today, streak: t.streak, is_recurring: true }]));
+                    }
+                }
+            });
+            if (updates.length > 0 || inserts.length > 0) {
+                await Promise.all([...updates, ...inserts]);
+                fetchTasks();
             }
         }
 
@@ -254,13 +281,12 @@
             document.getElementById('btn-' + tab).classList.add('active');
             document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
             document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
-            document.getElementById('view-title').innerText = tab === 'today' ? 'Hôm nay' : 'Ngày mai';
             render();
         }
 
         async function addNewTask() {
-            const text = prompt("Nhiệm vụ:"); if (!text) return;
-            const p = prompt("Độ ưu tiên (1:4đ, 2:3đ, 3:2đ, 4:1đ):", "4");
+            const text = prompt("Nhiệm vụ mới:"); if (!text) return;
+            const p = prompt("Độ ưu tiên (1-4):", "4");
             const date = currentTab === 'tomorrow' ? new Date(Date.now() + 86400000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
             await client.from('tasks').insert([{ text, priority: parseInt(p) || 4, task_date: date, streak: 0 }]);
             fetchTasks();
@@ -269,7 +295,7 @@
         function animateNumber(id, val) {
             const el = document.getElementById(id);
             const start = parseFloat(el.innerText) || 0;
-            const duration = 800;
+            const duration = 1000;
             let startTs = null;
             const step = (ts) => {
                 if (!startTs) startTs = ts;
@@ -280,7 +306,10 @@
             requestAnimationFrame(step);
         }
 
-        window.onload = fetchTasks;
+        window.onload = async () => {
+            await fetchTasks();
+            await syncLogic();
+        };
     </script>
 </body>
 </html>
