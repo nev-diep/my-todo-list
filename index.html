@@ -61,13 +61,12 @@
         .nav-item { color: #9ca3af; transition: all 0.2s; background: none; border: none; cursor: pointer; flex: 1; }
         .nav-item.active { color: #4f46e5; }
 
-        /* Priority Selector Style */
-        .priority-dot { width: 24px; height: 24px; border-radius: 50%; border: 3px solid; cursor: pointer; transition: 0.2s; }
-        .priority-popover { position: absolute; right: 0; top: 35px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: none; padding: 8px; flex-direction: column; gap: 8px; z-index: 50; }
+        /* Priority Popover */
+        .priority-popover { position: absolute; right: 0; top: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; padding: 12px; flex-direction: column; gap: 12px; z-index: 2000; border: 1px solid #f3f4f6; }
         .priority-popover.active { display: flex; }
     </style>
 </head>
-<body>
+<body onclick="handleClickOutside(event)">
 
     <header class="score-header">
         <div class="flex items-center gap-3">
@@ -88,21 +87,22 @@
         <div id="task-view">
             <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
             
-            <div id="inline-add-container" class="mb-3 hidden">
-                <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
-                    <div class="w-[26px] h-[26px] rounded-full border-3 border-gray-300"></div>
+            <div id="inline-add-container" class="mb-3 hidden" onclick="event.stopPropagation()">
+                <div class="bg-white p-4 rounded-2xl border-2 border-indigo-100 flex items-center gap-4 shadow-sm relative">
+                    <div class="w-[26px] h-[26px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
+                    
                     <input type="text" id="inline-task-input" 
                         class="flex-1 text-lg font-semibold outline-none bg-transparent" 
                         placeholder="Nhiệm vụ mới..."
                         onkeydown="handleInlineKey(event)">
                     
-                    <div class="relative">
-                        <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
+                    <div class="relative flex-shrink-0">
+                        <button id="p-select-btn" onclick="togglePriorityMenu(event)" class="text-2xl leading-none">⚪</button>
                         <div id="priority-menu" class="priority-popover">
-                            <button onclick="setInlinePriority(1, '#ef4444')">🔴</button>
-                            <button onclick="setInlinePriority(2, '#fb923c')">🟡</button>
-                            <button onclick="setInlinePriority(3, '#60a5fa')">🔵</button>
-                            <button onclick="setInlinePriority(4, '#9ca3af')">⚪</button>
+                            <button onclick="setInlinePriority(1, '🔴')">🔴</button>
+                            <button onclick="setInlinePriority(2, '🟡')">🟡</button>
+                            <button onclick="setInlinePriority(3, '🔵')">🔵</button>
+                            <button onclick="setInlinePriority(4, '⚪')">⚪</button>
                         </div>
                     </div>
                 </div>
@@ -123,7 +123,7 @@
         </div>
     </main>
 
-    <button onclick="showInlineAdd()" class="add-btn-floating">
+    <button id="add-trigger-btn" onclick="showInlineAdd(event)" class="add-btn-floating">
         <i class="fas fa-plus"></i>
     </button>
 
@@ -148,41 +148,58 @@
         let currentTab = 'today';
         let tempPriority = 4;
 
-        // Logic Input mới kiểu Apple Reminders
-        function showInlineAdd() {
+        // --- LOGIC NHẬP TASK MỚI ---
+        function showInlineAdd(e) {
+            e.stopPropagation();
             const container = document.getElementById('inline-add-container');
             container.classList.remove('hidden');
             const input = document.getElementById('inline-task-input');
             input.focus();
             tempPriority = 4;
-            document.getElementById('current-p-dot').style.borderColor = '#9ca3af';
+            document.getElementById('p-select-btn').innerText = '⚪';
         }
 
-        function togglePriorityMenu() {
+        function togglePriorityMenu(e) {
+            e.stopPropagation();
             document.getElementById('priority-menu').classList.toggle('active');
         }
 
-        function setInlinePriority(p, color) {
+        function setInlinePriority(p, icon) {
             tempPriority = p;
-            document.getElementById('current-p-dot').style.borderColor = color;
+            document.getElementById('p-select-btn').innerText = icon;
             document.getElementById('priority-menu').classList.remove('active');
         }
 
-        async function handleInlineKey(e) {
-            if (e.key === 'Enter') {
-                const text = e.target.value.trim();
-                if (!text) return;
-                const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
-                await client.from('tasks').insert([{ text, priority: tempPriority, task_date: targetDate, streak: 0 }]);
-                e.target.value = '';
+        async function saveInlineTask() {
+            const input = document.getElementById('inline-task-input');
+            const text = input.value.trim();
+            if (!text) {
                 document.getElementById('inline-add-container').classList.add('hidden');
-                fetchTasks();
-            } else if (e.key === 'Escape') {
+                return;
+            }
+            const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
+            await client.from('tasks').insert([{ text, priority: tempPriority, task_date: targetDate, streak: 0 }]);
+            input.value = '';
+            document.getElementById('inline-add-container').classList.add('hidden');
+            fetchTasks();
+        }
+
+        function handleInlineKey(e) {
+            if (e.key === 'Enter') saveInlineTask();
+            if (e.key === 'Escape') {
+                document.getElementById('inline-task-input').value = '';
                 document.getElementById('inline-add-container').classList.add('hidden');
-                e.target.value = '';
             }
         }
 
+        function handleClickOutside(e) {
+            const container = document.getElementById('inline-add-container');
+            if (!container.classList.contains('hidden')) {
+                saveInlineTask();
+            }
+        }
+
+        // --- CÁC HÀM CORE GIỮ NGUYÊN ---
         function getLocalYYYYMMDD(offset = 0) {
             const d = new Date();
             d.setDate(d.getDate() + offset);
@@ -226,7 +243,6 @@
             el.style.color = pColors[priority];
             
             const startX = e.clientX; const startY = e.clientY;
-            const midX = window.innerWidth / 2; const midY = window.innerHeight / 2;
             const target = document.getElementById('total-score');
             const rect = target.getBoundingClientRect();
             const endX = rect.left + rect.width / 2; const endY = rect.top + rect.height / 2;
@@ -237,7 +253,7 @@
 
             requestAnimationFrame(() => {
                 setTimeout(() => {
-                    el.style.transform = `translate3d(${midX}px, ${midY}px, 0) translate(-50%, -50%) scale(1)`;
+                    el.style.transform = `translate3d(${window.innerWidth/2}px, ${window.innerHeight/2}px, 0) translate(-50%, -50%) scale(1)`;
                 }, 20);
             });
 
