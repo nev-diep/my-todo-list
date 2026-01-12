@@ -12,7 +12,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .score-header { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid #e5e7eb; padding-top: env(safe-area-inset-top); }
-        .floating-point { position: fixed; font-weight: 900; pointer-events: none; z-index: 9999; font-size: 5rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out; will-change: transform, opacity; top: 0; left: 0; }
         
         .cb-custom { width: 26px; height: 26px; border-radius: 50%; border: 3px solid; appearance: none; position: relative; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
         .cb-custom::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; opacity: 0; }
@@ -24,20 +23,15 @@
 
         main { padding: 100px 16px 110px 16px; max-width: 600px; margin: 0 auto; }
         .add-btn-floating { position: fixed; bottom: 90px; left: 20px; width: 56px; height: 56px; background: #4f46e5; border-radius: 18px; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); z-index: 1001; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { color: #9ca3af; transition: all 0.2s; background: none; border: none; cursor: pointer; flex: 1; }
-        .nav-item.active { color: #4f46e5; }
         
-        /* Autocomplete */
         #autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 3000; max-height: 200px; overflow-y: auto; display: none; margin-top: 5px; border: 1px solid #f3f4f6; }
         .suggestion-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f9fafb; font-weight: 500; }
-        .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item:hover { background-color: #f3f4f6; }
 
-        /* Swipe to Delete */
-        .task-wrapper { position: relative; overflow: hidden; border-radius: 1rem; }
-        .task-content { position: relative; transition: transform 0.3s ease; z-index: 2; background: white; }
-        .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; z-index: 1; border-radius: 0 1rem 1rem 0; cursor: pointer; }
+        /* Swipe to Delete v2 */
+        .task-wrapper { position: relative; overflow: hidden; border-radius: 1rem; margin-bottom: 0.75rem; touch-action: pan-y; }
+        .task-content { position: relative; transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 2; background: white; }
+        .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; z-index: 1; border-radius: 0 1rem 1rem 0; cursor: pointer; font-size: 1.2rem; }
 
         .priority-popover { position: absolute; right: 0; top: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; padding: 12px; flex-direction: column; gap: 12px; z-index: 2000; border: 1px solid #f3f4f6; }
         .priority-popover.active { display: flex; }
@@ -79,16 +73,15 @@
                 </div>
             </div>
 
-            <div id="active-tasks" class="space-y-3"></div>
+            <div id="active-tasks" class="space-y-1"></div>
             <details class="mt-8 group" id="completed-section">
                 <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-100/50 p-3 rounded-xl select-none">
                     <i class="fas fa-chevron-right transition-transform group-open:rotate-90 text-[10px]"></i>
                     <span>ĐÃ XONG (<span id="completed-count">0</span>)</span>
                 </summary>
-                <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
+                <div id="completed-tasks" class="mt-4 space-y-1 opacity-60"></div>
             </details>
         </div>
-        <div id="achievements-view" class="hidden"><h2 class="text-lg font-extrabold mb-5">Thành Tựu Kỷ Luật</h2><div id="achievement-list" class="space-y-3"></div></div>
     </main>
 
     <button id="add-trigger-btn" onclick="showInlineAdd(event)" class="add-btn-floating"><i class="fas fa-plus"></i></button>
@@ -108,6 +101,7 @@
         let currentTab = 'today';
         let tempPriority = 4;
         let startX = 0;
+        let activeSwipeId = null;
 
         function getLocalYYYYMMDD(offsetDays = 0) {
             const now = new Date();
@@ -119,8 +113,7 @@
         function showInlineAdd(e) {
             e.stopPropagation();
             document.getElementById('inline-add-container').classList.remove('hidden');
-            const input = document.getElementById('inline-task-input');
-            input.focus();
+            document.getElementById('inline-task-input').focus();
             tempPriority = 4;
             document.getElementById('p-select-btn').innerText = '⚪';
         }
@@ -131,23 +124,19 @@
             if (!val) { list.style.display = 'none'; return; }
             const suggestions = [...new Set(allTasks.map(t => t.text))].filter(t => t.toLowerCase().includes(val)).slice(0, 5);
             if (suggestions.length) {
-                list.innerHTML = suggestions.map(s => `<div class="suggestion-item" onclick="selectSuggestion('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
+                list.innerHTML = suggestions.map(s => `<div class="suggestion-item" onclick="selectAndSaveSuggestion('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
                 list.style.display = 'block';
             } else { list.style.display = 'none'; }
         }
 
-        function selectSuggestion(val) {
+        async function selectAndSaveSuggestion(val) {
             document.getElementById('inline-task-input').value = val;
             document.getElementById('autocomplete-list').style.display = 'none';
+            await saveInlineTask();
         }
 
         function togglePriorityMenu(e) { e.stopPropagation(); document.getElementById('priority-menu').classList.toggle('active'); }
-
-        async function setInlinePriority(p) {
-            tempPriority = p;
-            document.getElementById('priority-menu').classList.remove('active');
-            await saveInlineTask();
-        }
+        async function setInlinePriority(p) { tempPriority = p; await saveInlineTask(); }
 
         async function saveInlineTask() {
             const input = document.getElementById('inline-task-input');
@@ -161,23 +150,15 @@
             fetchTasks();
         }
 
-        function handleInlineKey(e) {
-            if (e.key === 'Enter') saveInlineTask();
-            if (e.key === 'Escape') {
-                document.getElementById('inline-task-input').value = '';
-                document.getElementById('inline-add-container').classList.add('hidden');
-                document.getElementById('autocomplete-list').style.display = 'none';
-            }
-        }
-
-        function handleClickOutside(e) {
+        function handleInlineKey(e) { if (e.key === 'Enter') saveInlineTask(); }
+        function handleClickOutside(e) { 
             const container = document.getElementById('inline-add-container');
-            if (!container.classList.contains('hidden') && !e.target.closest('.suggestion-item')) saveInlineTask();
+            if (!container.classList.contains('hidden') && !e.target.closest('#inline-add-container')) saveInlineTask();
+            if (activeSwipeId) closeAllSwipes();
         }
 
         async function fetchTasks() {
-            const { data, error } = await client.from('tasks').select('*');
-            if (error) return;
+            const { data } = await client.from('tasks').select('*');
             allTasks = data || [];
             updateHeader();
             render();
@@ -186,50 +167,43 @@
         function updateHeader() {
             const today = getLocalYYYYMMDD(0);
             const totalScore = allTasks.reduce((sum, t) => {
-                const baseMap = { 1: 4, 2: 3, 3: 2, 4: 1 };
-                const p = baseMap[t.priority || 4] * Math.pow(1.001, t.streak || 0);
-                if (t.completed) return sum + p;
-                if (t.task_date < today) return sum - p;
-                return sum;
+                const p = {1:4, 2:3, 3:2, 4:1}[t.priority || 4] * Math.pow(1.001, t.streak || 0);
+                return t.completed ? sum + p : (t.task_date < today ? sum - p : sum);
             }, 0);
-            const el = document.getElementById('total-score');
-            const start = parseFloat(el.innerText) || 0;
-            const duration = 1000; let startTimestamp = null;
-            const step = (ts) => {
-                if (!startTimestamp) startTimestamp = ts;
-                const progress = Math.min((ts - startTimestamp) / duration, 1);
-                el.innerText = (progress * (totalScore - start) + start).toFixed(2);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-            const rankTitle = document.getElementById('rank-title');
-            if (totalScore > 2100) rankTitle.innerText = "KỶ LUẬT (3 THÁNG)";
-            else if (totalScore > 500) rankTitle.innerText = "BỀN BỈ (1 THÁNG)";
-            else if (totalScore > 0) rankTitle.innerText = "TẬP SỰ";
-            else rankTitle.innerText = "KHỞI ĐẦU";
+            document.getElementById('total-score').innerText = totalScore.toFixed(2);
         }
 
-        // --- SWIPE LOGIC ---
-        function handleTouchStart(e) { startX = e.touches[0].clientX; }
-        function handleTouchMove(e, id) {
-            const currentX = e.touches[0].clientX;
-            const diff = startX - currentX;
-            const content = document.getElementById(`task-content-${id}`);
-            if (diff > 20 && diff < 100) content.style.transform = `translateX(-${diff}px)`;
-            if (diff >= 100) content.style.transform = `translateX(-80px)`;
-            if (diff < 0) content.style.transform = `translateX(0px)`;
+        // --- IMPROVED SWIPE LOGIC ---
+        function closeAllSwipes() {
+            document.querySelectorAll('.task-content').forEach(el => el.style.transform = 'translateX(0px)');
+            activeSwipeId = null;
         }
+
+        function handleTouchStart(e, id) {
+            if (activeSwipeId && activeSwipeId !== id) closeAllSwipes();
+            startX = e.touches[0].clientX;
+        }
+
+        function handleTouchMove(e, id) {
+            const diff = startX - e.touches[0].clientX;
+            const content = document.getElementById(`task-content-${id}`);
+            if (diff > 10) {
+                activeSwipeId = id;
+                const move = Math.min(diff, 100);
+                content.style.transform = `translateX(-${move}px)`;
+            }
+        }
+
         function handleTouchEnd(e, id) {
             const content = document.getElementById(`task-content-${id}`);
-            const transform = new WebKitCSSMatrix(window.getComputedStyle(content).transform).m41;
-            if (transform < -50) content.style.transform = `translateX(-80px)`;
-            else content.style.transform = `translateX(0px)`;
+            const diff = startX - e.changedTouches[0].clientX;
+            if (diff > 30) content.style.transform = `translateX(-80px)`;
+            else { content.style.transform = `translateX(0px)`; activeSwipeId = null; }
         }
 
-        async function toggleTask(id, status, priority, streak, e) {
+        async function toggleTask(id, status, priority, streak) {
             const isChecking = !status;
-            if (isChecking) streak = (streak || 0) + 1;
-            await client.from('tasks').update({ completed: isChecking, streak: streak, last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null }).eq('id', id);
+            await client.from('tasks').update({ completed: isChecking, streak: isChecking ? (streak || 0) + 1 : streak, last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null }).eq('id', id);
             fetchTasks();
         }
 
@@ -237,48 +211,28 @@
             const activeDiv = document.getElementById('active-tasks');
             const completedDiv = document.getElementById('completed-tasks');
             const today = getLocalYYYYMMDD(0);
-            const tomorrow = getLocalYYYYMMDD(1);
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
-            let filteredTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= today : t.task_date === tomorrow);
-            filteredTasks.sort((a, b) => a.priority - b.priority);
+            let filtered = allTasks.filter(t => currentTab === 'today' ? t.task_date <= today : t.task_date === getLocalYYYYMMDD(1));
+            filtered.sort((a, b) => a.priority - b.priority);
 
-            const itemHTML = t => {
-                const isOverdue = t.task_date < today && !t.completed;
-                return `
+            const itemHTML = t => `
                 <div class="task-wrapper">
                     <div class="delete-action" onclick="deleteTask(${t.id})"><i class="fas fa-trash"></i></div>
                     <div id="task-content-${t.id}" class="task-content bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm"
-                         ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event, ${t.id})" ontouchend="handleTouchEnd(event, ${t.id})">
+                         ontouchstart="handleTouchStart(event, ${t.id})" ontouchmove="handleTouchMove(event, ${t.id})" ontouchend="handleTouchEnd(event, ${t.id})">
                         <div class="flex items-center gap-4 flex-1">
-                            <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" class="cb-custom cb-p${t.priority}">
+                            <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak})" class="cb-custom cb-p${t.priority}">
                             <div class="flex flex-col">
-                                <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
-                                ${isOverdue ? '<span class="text-[10px] font-bold text-red-500">Hôm qua</span>' : ''}
+                                <span class="text-lg font-semibold ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
+                                ${t.task_date < today && !t.completed ? '<span class="text-[10px] font-bold text-red-500">Hôm qua</span>' : ''}
                             </div>
                         </div>
-                        <div class="flex items-center">
-                            ${t.streak > 0 ? `<span class="text-sm font-black text-gray-300 ml-4">${t.streak}</span>` : ''}
-                        </div>
+                        ${t.streak > 0 ? `<span class="text-sm font-black text-gray-300 ml-4">${t.streak}</span>` : ''}
                     </div>
                 </div>`;
-            };
 
-            activeDiv.innerHTML = filteredTasks.filter(t => !t.completed).map(itemHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
-            completedDiv.innerHTML = filteredTasks.filter(t => t.completed).map(itemHTML).join('');
-            document.getElementById('completed-count').innerText = filteredTasks.filter(t => t.completed).length;
-
-            if (currentTab === 'achievements') {
-                const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
-                    acc[t.text] = acc[t.text] || { total: 0, maxStreak: 0 };
-                    acc[t.text].total++; acc[t.text].maxStreak = Math.max(acc[t.text].maxStreak, t.streak);
-                    return acc;
-                }, {});
-                document.getElementById('achievement-list').innerHTML = Object.entries(summary).sort((a,b) => b[1].total - a[1].total).map(([name, data]) => `
-                    <div class="bg-white p-4 rounded-xl flex justify-between items-center border-l-4 border-indigo-500 shadow-sm">
-                        <div><p class="font-bold text-sm text-gray-800">${name}</p><p class="text-[9px] text-gray-400 font-bold uppercase">Cao nhất: ${data.maxStreak}</p></div>
-                        <div class="bg-indigo-50 text-indigo-600 font-black px-3 py-1 rounded-lg text-sm">${data.total}x</div>
-                    </div>`).join('');
-            }
+            activeDiv.innerHTML = filtered.filter(t => !t.completed).map(itemHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
+            completedDiv.innerHTML = filtered.filter(t => t.completed).map(itemHTML).join('');
+            document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
         }
 
         async function deleteTask(id) { await client.from('tasks').delete().eq('id', id); fetchTasks(); }
@@ -286,22 +240,10 @@
             currentTab = tab;
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('btn-' + tab).classList.add('active');
-            document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
-            document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
-            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'NGÀY MAI';
-            render();
+            fetchTasks();
         }
 
-        async function runDailySync() {
-            const today = getLocalYYYYMMDD(0);
-            const updates = [];
-            allTasks.forEach(t => {
-                if (!t.completed && t.task_date < today) updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
-            });
-            if (updates.length) { await Promise.all(updates); fetchTasks(); }
-        }
-
-        window.onload = async () => { await fetchTasks(); await runDailySync(); };
+        window.onload = async () => { await fetchTasks(); };
     </script>
 </body>
 </html>
