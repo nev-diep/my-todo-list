@@ -24,17 +24,19 @@
         main { padding: 100px 16px 110px 16px; max-width: 600px; margin: 0 auto; }
         .add-btn-floating { position: fixed; bottom: 90px; left: 20px; width: 56px; height: 56px; background: #4f46e5; border-radius: 18px; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); z-index: 1001; }
         
-        #autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 3000; max-height: 200px; overflow-y: auto; display: none; margin-top: 5px; border: 1px solid #f3f4f6; }
-        .suggestion-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f9fafb; font-weight: 500; }
-        .suggestion-item:hover { background-color: #f3f4f6; }
+        #autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 3000; max-height: 250px; overflow-y: auto; display: none; margin-top: 8px; border: 1px solid #e5e7eb; }
+        .suggestion-item { padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+        .suggestion-item:hover { background-color: #f9fafb; }
 
-        /* Swipe to Delete v2 */
         .task-wrapper { position: relative; overflow: hidden; border-radius: 1rem; margin-bottom: 0.75rem; touch-action: pan-y; }
-        .task-content { position: relative; transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); z-index: 2; background: white; }
-        .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; z-index: 1; border-radius: 0 1rem 1rem 0; cursor: pointer; font-size: 1.2rem; }
+        .task-content { position: relative; transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; background: white; }
+        .delete-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; z-index: 1; border-radius: 0 1rem 1rem 0; cursor: pointer; }
 
-        .priority-popover { position: absolute; right: 0; top: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; padding: 12px; flex-direction: column; gap: 12px; z-index: 2000; border: 1px solid #f3f4f6; }
+        .priority-popover { position: absolute; right: 0; top: 45px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; padding: 12px; flex-direction: column; gap: 12px; z-index: 2000; border: 1px solid #f3f4f6; }
         .priority-popover.active { display: flex; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { color: #9ca3af; transition: all 0.2s; background: none; border: none; cursor: pointer; flex: 1; height: 100%; }
+        .nav-item.active { color: #4f46e5; }
     </style>
 </head>
 <body onclick="handleClickOutside(event)">
@@ -53,7 +55,6 @@
     <main>
         <div id="task-view">
             <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
-            
             <div id="inline-add-container" class="mb-3 hidden" onclick="event.stopPropagation()">
                 <div class="bg-white p-4 rounded-2xl border-2 border-indigo-100 flex items-center gap-4 shadow-sm relative">
                     <div class="w-[26px] h-[26px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
@@ -64,15 +65,11 @@
                     <div class="relative flex-shrink-0">
                         <button id="p-select-btn" onclick="togglePriorityMenu(event)" class="text-2xl leading-none">⚪</button>
                         <div id="priority-menu" class="priority-popover">
-                            <button onclick="setInlinePriority(1)">🔴</button>
-                            <button onclick="setInlinePriority(2)">🟡</button>
-                            <button onclick="setInlinePriority(3)">🔵</button>
-                            <button onclick="setInlinePriority(4)">⚪</button>
+                            <button onclick="setInlinePriority(1)">🔴</button><button onclick="setInlinePriority(2)">🟡</button><button onclick="setInlinePriority(3)">🔵</button><button onclick="setInlinePriority(4)">⚪</button>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div id="active-tasks" class="space-y-1"></div>
             <details class="mt-8 group" id="completed-section">
                 <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-100/50 p-3 rounded-xl select-none">
@@ -82,14 +79,24 @@
                 <div id="completed-tasks" class="mt-4 space-y-1 opacity-60"></div>
             </details>
         </div>
+        <div id="achievements-view" class="hidden">
+            <h2 class="text-lg font-extrabold mb-5">Thành Tựu Kỷ Luật</h2>
+            <div id="achievement-list" class="space-y-3"></div>
+        </div>
     </main>
 
     <button id="add-trigger-btn" onclick="showInlineAdd(event)" class="add-btn-floating"><i class="fas fa-plus"></i></button>
 
     <nav class="bottom-nav">
-        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex flex-col items-center"><i class="fas fa-calendar-check text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Today</span></button>
-        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center"><i class="fas fa-calendar-plus text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Next</span></button>
-        <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex flex-col items-center"><i class="fas fa-award text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Ranks</span></button>
+        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex flex-col items-center justify-center">
+            <i class="fas fa-calendar-check text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Today</span>
+        </button>
+        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center justify-center">
+            <i class="fas fa-calendar-plus text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Next</span>
+        </button>
+        <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex flex-col items-center justify-center">
+            <i class="fas fa-award text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Ranks</span>
+        </button>
     </nav>
 
     <script>
@@ -114,24 +121,32 @@
             e.stopPropagation();
             document.getElementById('inline-add-container').classList.remove('hidden');
             document.getElementById('inline-task-input').focus();
-            tempPriority = 4;
-            document.getElementById('p-select-btn').innerText = '⚪';
         }
 
         function handleAutocomplete(e) {
             const val = e.target.value.trim().toLowerCase();
             const list = document.getElementById('autocomplete-list');
             if (!val) { list.style.display = 'none'; return; }
-            const suggestions = [...new Set(allTasks.map(t => t.text))].filter(t => t.toLowerCase().includes(val)).slice(0, 5);
+            
+            // Tìm các task duy nhất kèm độ ưu tiên gần nhất của chúng
+            const map = new Map();
+            allTasks.forEach(t => map.set(t.text.toLowerCase(), { text: t.text, priority: t.priority }));
+            const suggestions = Array.from(map.values()).filter(t => t.text.toLowerCase().includes(val)).slice(0, 5);
+            
             if (suggestions.length) {
-                list.innerHTML = suggestions.map(s => `<div class="suggestion-item" onclick="selectAndSaveSuggestion('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
+                const pIcons = {1:'🔴', 2:'🟡', 3:'🔵', 4:'⚪'};
+                list.innerHTML = suggestions.map(s => `
+                    <div class="suggestion-item" onclick="selectAndSaveSuggestion('${s.text.replace(/'/g, "\\'")}', ${s.priority})">
+                        <span>${s.text}</span>
+                        <span class="text-xs opacity-50">${pIcons[s.priority]}</span>
+                    </div>`).join('');
                 list.style.display = 'block';
             } else { list.style.display = 'none'; }
         }
 
-        async function selectAndSaveSuggestion(val) {
-            document.getElementById('inline-task-input').value = val;
-            document.getElementById('autocomplete-list').style.display = 'none';
+        async function selectAndSaveSuggestion(text, priority) {
+            tempPriority = priority;
+            document.getElementById('inline-task-input').value = text;
             await saveInlineTask();
         }
 
@@ -151,9 +166,11 @@
         }
 
         function handleInlineKey(e) { if (e.key === 'Enter') saveInlineTask(); }
-        function handleClickOutside(e) { 
-            const container = document.getElementById('inline-add-container');
-            if (!container.classList.contains('hidden') && !e.target.closest('#inline-add-container')) saveInlineTask();
+        function handleClickOutside(e) {
+            if (!e.target.closest('#inline-add-container')) {
+                document.getElementById('inline-add-container').classList.add('hidden');
+                document.getElementById('autocomplete-list').style.display = 'none';
+            }
             if (activeSwipeId) closeAllSwipes();
         }
 
@@ -173,7 +190,6 @@
             document.getElementById('total-score').innerText = totalScore.toFixed(2);
         }
 
-        // --- IMPROVED SWIPE LOGIC ---
         function closeAllSwipes() {
             document.querySelectorAll('.task-content').forEach(el => el.style.transform = 'translateX(0px)');
             activeSwipeId = null;
@@ -189,15 +205,14 @@
             const content = document.getElementById(`task-content-${id}`);
             if (diff > 10) {
                 activeSwipeId = id;
-                const move = Math.min(diff, 100);
-                content.style.transform = `translateX(-${move}px)`;
+                content.style.transform = `translateX(-${Math.min(diff, 100)}px)`;
             }
         }
 
         function handleTouchEnd(e, id) {
             const content = document.getElementById(`task-content-${id}`);
             const diff = startX - e.changedTouches[0].clientX;
-            if (diff > 30) content.style.transform = `translateX(-80px)`;
+            if (diff > 35) content.style.transform = `translateX(-80px)`;
             else { content.style.transform = `translateX(0px)`; activeSwipeId = null; }
         }
 
@@ -211,6 +226,25 @@
             const activeDiv = document.getElementById('active-tasks');
             const completedDiv = document.getElementById('completed-tasks');
             const today = getLocalYYYYMMDD(0);
+            const isAchTab = currentTab === 'achievements';
+            
+            document.getElementById('task-view').classList.toggle('hidden', isAchTab);
+            document.getElementById('achievements-view').classList.toggle('hidden', !isAchTab);
+
+            if (isAchTab) {
+                const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                    acc[t.text] = acc[t.text] || { total: 0, max: 0 };
+                    acc[t.text].total++; acc[t.text].max = Math.max(acc[t.text].max, t.streak);
+                    return acc;
+                }, {});
+                document.getElementById('achievement-list').innerHTML = Object.entries(summary).map(([name, d]) => `
+                    <div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm">
+                        <div><p class="font-bold">${name}</p><p class="text-[10px] text-gray-400 uppercase">Max Streak: ${d.max}</p></div>
+                        <div class="bg-indigo-50 text-indigo-600 font-black px-3 py-1 rounded-lg">${d.total}x</div>
+                    </div>`).join('');
+                return;
+            }
+
             let filtered = allTasks.filter(t => currentTab === 'today' ? t.task_date <= today : t.task_date === getLocalYYYYMMDD(1));
             filtered.sort((a, b) => a.priority - b.priority);
 
@@ -236,14 +270,16 @@
         }
 
         async function deleteTask(id) { await client.from('tasks').delete().eq('id', id); fetchTasks(); }
+        
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('btn-' + tab).classList.add('active');
-            fetchTasks();
+            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'NGÀY MAI';
+            render();
         }
 
-        window.onload = async () => { await fetchTasks(); };
+        window.onload = fetchTasks;
     </script>
 </body>
 </html>
