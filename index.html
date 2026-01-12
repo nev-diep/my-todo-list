@@ -21,12 +21,23 @@
             padding-top: env(safe-area-inset-top);
         }
 
-        /* 2. Floating Point Animation */
-        .floating-point {
-            position: fixed; font-weight: 800; color: #4f46e5; pointer-events: none;
-            z-index: 9999; transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
-            font-size: 1.2rem; opacity: 0;
-        }
+/* 2. Hiệu ứng bay điểm sắc nét */
+.floating-point {
+    position: fixed;
+    font-weight: 900;
+    color: #4f46e5;
+    pointer-events: none;
+    z-index: 9999;
+    /* transition cho cả font-size, vị trí và độ trong suốt */
+    transition: 
+        top 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+        left 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+        font-size 0.4s ease-out,
+        opacity 0.8s ease-in;
+    font-size: 1rem;
+    opacity: 0;
+    text-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
 
         /* 9. Font size bigger */
         .task-name { font-size: 1.1rem; font-weight: 600; line-height: 1.3; }
@@ -153,37 +164,46 @@
         }
 
         // 2. Point Animation
-        function shootPoint(e, points) {
-            const el = document.createElement('div');
-            el.className = 'floating-point';
-            el.innerHTML = `+${points.toFixed(2)}`;
-            el.style.left = e.clientX + 'px';
-            el.style.top = e.clientY + 'px';
-            el.style.opacity = '1';
-            document.body.appendChild(el);
+function shootPoint(e, points) {
+    const el = document.createElement('div');
+    el.className = 'floating-point';
+    el.innerHTML = `+${points.toFixed(2)}`;
+    
+    // Vị trí xuất hiện ban đầu (ngay tại checkbox)
+    el.style.left = e.clientX + 'px';
+    el.style.top = e.clientY + 'px';
+    el.style.opacity = '1';
+    document.body.appendChild(el);
 
-            const scoreContainer = document.getElementById('total-score').parentElement;
+    const scoreEl = document.getElementById('total-score');
+    const rect = scoreEl.getBoundingClientRect();
 
-            setTimeout(() => {
-                el.style.left = '50%'; el.style.top = '50%';
-                el.style.transform = 'translate(-50%, -50%) scale(4)';
-                el.style.color = '#10b981';
-            }, 50);
+    // Giai đoạn 1: Bay ra giữa màn hình và phóng to cỡ chữ (Sắc nét)
+    setTimeout(() => {
+        el.style.left = '50%';
+        el.style.top = '50%';
+        el.style.transform = 'translate(-50%, -50%)'; // Chỉ dùng để căn giữa, không zoom
+        el.style.fontSize = '5rem'; // Cỡ chữ thật, cực đại và sắc nét
+        el.style.color = '#10b981'; // Đổi sang màu xanh lá khi đạt đỉnh
+    }, 50);
 
-            setTimeout(() => {
-                const rect = document.getElementById('total-score').getBoundingClientRect();
-                el.style.left = rect.left + 'px';
-                el.style.top = rect.top + 'px';
-                el.style.transform = 'scale(0.1)';
-                el.style.opacity = '0';
-            }, 850);
+    // Giai đoạn 2: Bay về đích (thu nhỏ lại và mờ dần)
+    setTimeout(() => {
+        el.style.left = rect.left + 'px';
+        el.style.top = rect.top + 'px';
+        el.style.fontSize = '0.5rem';
+        el.style.opacity = '0';
+        el.style.transform = 'translate(0, 0)'; // Trả về gốc để khớp vị trí điểm tổng
+    }, 900);
 
-            setTimeout(() => { 
-                el.remove();
-                scoreContainer.classList.add('bump-animation');
-                setTimeout(() => scoreContainer.classList.remove('bump-animation'), 400);
-            }, 1500);
-        }
+    // Giai đoạn 3: Hiệu ứng rung nhẹ tại điểm tổng và xóa element
+    setTimeout(() => { 
+        el.remove();
+        const scoreContainer = scoreEl.parentElement;
+        scoreContainer.classList.add('bump-animation');
+        setTimeout(() => scoreContainer.classList.remove('bump-animation'), 400);
+    }, 1600);
+}
 
         async function toggleTask(id, status, priority, streak, e) {
             const isChecking = !status;
