@@ -162,53 +162,51 @@
 
         // 2. Point Animation
 function shootPoint(e, points) {
-            const el = document.createElement('div');
-            el.className = 'floating-point';
-            el.innerHTML = `+${points.toFixed(2)}`;
-            document.body.appendChild(el);
+    const el = document.createElement('div');
+    el.className = 'floating-point';
+    el.innerHTML = `+${points.toFixed(2)}`;
+    
+    // 1. Đặt vị trí xuất hiện ban đầu
+    const startX = e.clientX;
+    const startY = e.clientY;
+    
+    // Tính toán vị trí giữa màn hình
+    const midX = window.innerWidth / 2;
+    const midY = window.innerHeight / 2;
 
-            const rectEl = el.getBoundingClientRect();
-            const target = document.getElementById('total-score');
-            const targetRect = target.getBoundingClientRect();
+    // Tính toán vị trí đích (tổng điểm)
+    const target = document.getElementById('total-score');
+    const rect = target.getBoundingClientRect();
+    const endX = rect.left + rect.width / 2;
+    const endY = rect.top + rect.height / 2;
 
-            // Tọa độ click (trung tâm phần tử bay)
-            const startX = e.clientX - rectEl.width / 2;
-            const startY = e.clientY - rectEl.height / 2;
+    // Khởi tạo vị trí ban đầu (nhỏ và ở chỗ click)
+    el.style.left = '0px';
+    el.style.top = '0px';
+    el.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(0.2)`;
+    el.style.opacity = '1';
+    document.body.appendChild(el);
 
-            // Tọa độ giữa màn hình
-            const midX = (window.innerWidth / 2) - rectEl.width / 2;
-            const midY = (window.innerHeight / 2) - rectEl.height / 2;
+    // 2. Giai đoạn 1: Bay ra giữa và phóng to (Sắc nét 100%)
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            el.style.transform = `translate3d(${midX}px, ${midY}px, 0) translate(-50%, -50%) scale(1)`;
+        }, 20);
+    });
 
-            // Tọa độ đích (Số tổng điểm)
-            const endX = targetRect.left + (targetRect.width / 2) - rectEl.width / 2;
-            const endY = targetRect.top + (targetRect.height / 2) - rectEl.height / 2;
+    // 3. Giai đoạn 2: Bay về đích và thu nhỏ
+    setTimeout(() => {
+        el.style.transition = "transform 0.7s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.5s ease-in";
+        el.style.transform = `translate3d(${endX}px, ${endY}px, 0) translate(-50%, -50%) scale(0.1)`;
+        el.style.opacity = '0';
+    }, 1000);
 
-            // Bước 1: Khởi tạo
-            el.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(0.1)`;
-            el.style.opacity = '1';
-
-            // Bước 2: Bay ra giữa (Mượt 60fps)
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    el.style.transition = "transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease-out";
-                    el.style.transform = `translate3d(${midX}px, ${midY}px, 0) scale(1)`;
-                }, 20);
-            });
-
-            // Bước 3: Bay về đích (Chính xác từng pixel)
-            setTimeout(() => {
-                el.style.transition = "transform 0.7s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.7s ease-in";
-                el.style.transform = `translate3d(${endX}px, ${endY}px, 0) scale(0.1)`;
-                el.style.opacity = '0';
-            }, 1200);
-
-            setTimeout(() => {
-                el.remove();
-                target.parentElement.parentElement.classList.add('bump-animation');
-                setTimeout(() => target.parentElement.parentElement.classList.remove('bump-animation'), 400);
-            }, 1900);
-        }
-
+    setTimeout(() => {
+        el.remove();
+        target.parentElement.classList.add('bump-animation');
+        setTimeout(() => target.parentElement.classList.remove('bump-animation'), 400);
+    }, 1700);
+}
         async function toggleTask(id, status, priority, streak, e) {
             const isChecking = !status;
             if (isChecking) {
