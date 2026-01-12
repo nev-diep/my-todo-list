@@ -252,38 +252,42 @@ function shootPoint(e, points) {
             const completedDiv = document.getElementById('completed-tasks');
             const today = getLocalYYYYMMDD(0);
             const tomorrow = getLocalYYYYMMDD(1);
-
-            const taskItemHTML = t => `
-                <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
-                    <div class="flex items-center gap-4 flex-1">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} 
-                            onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
-                            class="cb-custom">
-                        <div class="flex flex-col">
-                            <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
-                            <span class="text-[9px] text-indigo-500 font-bold tracking-tight">HỆ SỐ: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} p-1">
-                            <i class="fas fa-infinity text-lg"></i>
-                        </button>
-                        <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-400 p-1">✕</button>
-                    </div>
-                </div>`;
+filtered.sort((a, b) => a.priority - b.priority);
+const taskItemHTML = t => {
+        const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+        const pClass = `cb-p${t.priority}`;
+        
+        return `
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-4 flex-1">
+                <input type="checkbox" ${t.completed ? 'checked' : ''} 
+                    onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
+                    class="cb-custom ${pClass}">
+                <div class="flex flex-col">
+                    <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
+                    <span class="text-[9px] font-bold" style="color: ${pColors[t.priority]}">HỆ SỐ: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} p-1">
+                    <i class="fas fa-infinity text-lg"></i>
+                </button>
+                <button onclick="deleteTask(${t.id})" class="text-gray-300 p-1">✕</button>
+            </div>
+        </div>`;
 
             const filteredTasks = allTasks.filter(t => {
                 if (currentTab === 'today') return t.task_date <= today;
                 if (currentTab === 'tomorrow') return t.task_date === tomorrow;
                 return true;
             });
-filtered.sort((a, b) => a.priority - b.priority);
+
             const activeOnes = filteredTasks.filter(t => !t.completed);
             const doneOnes = filteredTasks.filter(t => t.completed);
 
-            activeDiv.innerHTML = activeOnes.length ? activeOnes.map(taskItemHTML).join('') : '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi, nghỉ ngơi thôi!</p>';
-            completedDiv.innerHTML = doneOnes.map(taskItemHTML).join('');
-            document.getElementById('completed-count').innerText = doneOnes.length;
+    activeDiv.innerHTML = filtered.filter(t => !t.completed).map(taskItemHTML).join('');
+    completedDiv.innerHTML = filtered.filter(t => t.completed).map(taskItemHTML).join('');
+    document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
 
             if (currentTab === 'achievements') {
                 const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
