@@ -11,57 +11,24 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; -webkit-tap-highlight-color: transparent; }
-        
-        .score-header {
-            position: fixed; top: 0; left: 0; right: 0; height: 80px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; z-index: 1000; border-bottom: 1px solid #e5e7eb;
-            padding-top: env(safe-area-inset-top);
-        }
-
-        .floating-point {
-            position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
-            font-size: 5rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
-            will-change: transform, opacity; top: 0; left: 0;
-        }
-
+        .score-header { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid #e5e7eb; padding-top: env(safe-area-inset-top); }
+        .floating-point { position: fixed; font-weight: 900; pointer-events: none; z-index: 9999; font-size: 5rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out; will-change: transform, opacity; top: 0; left: 0; }
         .task-name { font-size: 1.1rem; font-weight: 600; line-height: 1.3; }
-
         .cb-custom { width: 26px; height: 26px; border-radius: 50%; border: 3px solid; appearance: none; position: relative; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
         .cb-custom::after { content: '✓'; color: white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; opacity: 0; }
         .cb-custom:checked::after { opacity: 1; }
-        
         .cb-p1 { border-color: #ef4444; } .cb-p1:checked { background-color: #ef4444; }
         .cb-p2 { border-color: #fb923c; } .cb-p2:checked { background-color: #fb923c; }
         .cb-p3 { border-color: #60a5fa; } .cb-p3:checked { background-color: #60a5fa; }
         .cb-p4 { border-color: #9ca3af; } .cb-p4:checked { background-color: #9ca3af; }
-
         .bump-animation { animation: bump 0.4s ease-out; }
         @keyframes bump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-
         main { padding: 100px 16px 110px 16px; max-width: 600px; margin: 0 auto; }
-        
-        .add-btn-floating {
-            position: fixed; bottom: 90px; left: 20px;
-            width: 56px; height: 56px; background: #4f46e5;
-            border-radius: 18px; color: white; display: flex;
-            align-items: center; justify-content: center; font-size: 20px;
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
-            z-index: 1001; transition: transform 0.2s;
-        }
+        .add-btn-floating { position: fixed; bottom: 90px; left: 20px; width: 56px; height: 56px; background: #4f46e5; border-radius: 18px; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); z-index: 1001; transition: transform 0.2s; }
         .add-btn-floating:active { transform: scale(0.9); }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 75px;
-            background: white; border-top: 1px solid #e5e7eb;
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { color: #9ca3af; transition: all 0.2s; background: none; border: none; cursor: pointer; flex: 1; }
         .nav-item.active { color: #4f46e5; }
-
-        /* Priority Popover */
         .priority-popover { position: absolute; right: 0; top: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; padding: 12px; flex-direction: column; gap: 12px; z-index: 2000; border: 1px solid #f3f4f6; }
         .priority-popover.active { display: flex; }
     </style>
@@ -90,19 +57,14 @@
             <div id="inline-add-container" class="mb-3 hidden" onclick="event.stopPropagation()">
                 <div class="bg-white p-4 rounded-2xl border-2 border-indigo-100 flex items-center gap-4 shadow-sm relative">
                     <div class="w-[26px] h-[26px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
-                    
-                    <input type="text" id="inline-task-input" 
-                        class="flex-1 text-lg font-semibold outline-none bg-transparent" 
-                        placeholder="Nhiệm vụ mới..."
-                        onkeydown="handleInlineKey(event)">
-                    
+                    <input type="text" id="inline-task-input" class="flex-1 text-lg font-semibold outline-none bg-transparent" placeholder="Nhiệm vụ mới..." onkeydown="handleInlineKey(event)">
                     <div class="relative flex-shrink-0">
                         <button id="p-select-btn" onclick="togglePriorityMenu(event)" class="text-2xl leading-none">⚪</button>
                         <div id="priority-menu" class="priority-popover">
-                            <button onclick="setInlinePriority(1, '🔴')">🔴</button>
-                            <button onclick="setInlinePriority(2, '🟡')">🟡</button>
-                            <button onclick="setInlinePriority(3, '🔵')">🔵</button>
-                            <button onclick="setInlinePriority(4, '⚪')">⚪</button>
+                            <button onclick="setInlinePriority(1)">🔴</button>
+                            <button onclick="setInlinePriority(2)">🟡</button>
+                            <button onclick="setInlinePriority(3)">🔵</button>
+                            <button onclick="setInlinePriority(4)">⚪</button>
                         </div>
                     </div>
                 </div>
@@ -148,7 +110,17 @@
         let currentTab = 'today';
         let tempPriority = 4;
 
-        // --- LOGIC NHẬP TASK MỚI ---
+        // --- FIXED TIMEZONE LOGIC ---
+        function getLocalYYYYMMDD(offsetDays = 0) {
+            const now = new Date();
+            // Điều chỉnh múi giờ local sang đúng ngày tại Việt Nam
+            const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+            if (offsetDays !== 0) {
+                localDate.setDate(localDate.getDate() + offsetDays);
+            }
+            return localDate.toISOString().split('T')[0];
+        }
+
         function showInlineAdd(e) {
             e.stopPropagation();
             const container = document.getElementById('inline-add-container');
@@ -164,10 +136,10 @@
             document.getElementById('priority-menu').classList.toggle('active');
         }
 
-        function setInlinePriority(p, icon) {
+        async function setInlinePriority(p) {
             tempPriority = p;
-            document.getElementById('p-select-btn').innerText = icon;
             document.getElementById('priority-menu').classList.remove('active');
+            await saveInlineTask();
         }
 
         async function saveInlineTask() {
@@ -199,18 +171,6 @@
             }
         }
 
-        // --- CÁC HÀM CORE GIỮ NGUYÊN ---
-        function getLocalYYYYMMDD(offset = 0) {
-            const d = new Date();
-            d.setDate(d.getDate() + offset);
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        }
-
-        function calculatePoints(priority, streak) {
-            const baseMap = { 1: 4, 2: 3, 3: 2, 4: 1 };
-            return baseMap[priority || 4] * Math.pow(1.001, streak || 0);
-        }
-
         async function fetchTasks() {
             const { data, error } = await client.from('tasks').select('*');
             if (error) return;
@@ -222,7 +182,8 @@
         function updateHeader() {
             const today = getLocalYYYYMMDD(0);
             const totalScore = allTasks.reduce((sum, t) => {
-                const p = calculatePoints(t.priority, t.streak);
+                const baseMap = { 1: 4, 2: 3, 3: 2, 4: 1 };
+                const p = baseMap[t.priority || 4] * Math.pow(1.001, t.streak || 0);
                 if (t.completed) return sum + p;
                 if (t.task_date < today) return sum - p;
                 return sum;
@@ -235,51 +196,48 @@
             else rankTitle.innerText = "KHỞI ĐẦU";
         }
 
-        function shootPoint(e, points, priority) {
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
-            const el = document.createElement('div');
-            el.className = 'floating-point';
-            el.innerHTML = `+${points.toFixed(2)}`;
-            el.style.color = pColors[priority];
-            
-            const startX = e.clientX; const startY = e.clientY;
-            const target = document.getElementById('total-score');
-            const rect = target.getBoundingClientRect();
-            const endX = rect.left + rect.width / 2; const endY = rect.top + rect.height / 2;
-
-            el.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(0.2)`;
-            el.style.opacity = '1';
-            document.body.appendChild(el);
-
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    el.style.transform = `translate3d(${window.innerWidth/2}px, ${window.innerHeight/2}px, 0) translate(-50%, -50%) scale(1)`;
-                }, 20);
-            });
-
-            setTimeout(() => {
-                el.style.transition = "transform 0.7s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.5s ease-in";
-                el.style.transform = `translate3d(${endX}px, ${endY}px, 0) translate(-50%, -50%) scale(0.1)`;
-                el.style.opacity = '0';
-            }, 1000);
-
-            setTimeout(() => {
-                el.remove();
-                target.parentElement.classList.add('bump-animation');
-                setTimeout(() => target.parentElement.classList.remove('bump-animation'), 400);
-            }, 1700);
+        function animateNumber(id, val) {
+            const el = document.getElementById(id);
+            const start = parseFloat(el.innerText) || 0;
+            const duration = 1000;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                el.innerText = (progress * (val - start) + start).toFixed(2);
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
         }
 
         async function toggleTask(id, status, priority, streak, e) {
             const isChecking = !status;
             if (isChecking) {
-                shootPoint(e, calculatePoints(priority, streak), priority);
+                // Point animation logic
+                const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+                const baseMap = { 1: 4, 2: 3, 3: 2, 4: 1 };
+                const points = baseMap[priority || 4] * Math.pow(1.001, streak || 0);
+                const floatEl = document.createElement('div');
+                floatEl.className = 'floating-point';
+                floatEl.innerHTML = `+${points.toFixed(2)}`;
+                floatEl.style.color = pColors[priority];
+                const target = document.getElementById('total-score');
+                const rect = target.getBoundingClientRect();
+                floatEl.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) scale(0.2)`;
+                floatEl.style.opacity = '1';
+                document.body.appendChild(floatEl);
+                requestAnimationFrame(() => {
+                    setTimeout(() => floatEl.style.transform = `translate3d(${window.innerWidth/2}px, ${window.innerHeight/2}px, 0) translate(-50%, -50%) scale(1)`, 20);
+                });
+                setTimeout(() => {
+                    floatEl.style.transition = "transform 0.7s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.5s ease-in";
+                    floatEl.style.transform = `translate3d(${rect.left + rect.width/2}px, ${rect.top + rect.height/2}px, 0) translate(-50%, -50%) scale(0.1)`;
+                    floatEl.style.opacity = '0';
+                }, 1000);
+                setTimeout(() => { floatEl.remove(); target.parentElement.classList.add('bump-animation'); setTimeout(() => target.parentElement.classList.remove('bump-animation'), 400); }, 1700);
                 streak = (streak || 0) + 1;
             }
-            await client.from('tasks').update({ 
-                completed: isChecking, streak: streak,
-                last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null
-            }).eq('id', id);
+            await client.from('tasks').update({ completed: isChecking, streak: streak, last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null }).eq('id', id);
             fetchTasks();
         }
 
@@ -289,59 +247,42 @@
             const today = getLocalYYYYMMDD(0);
             const tomorrow = getLocalYYYYMMDD(1);
             const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
-
-            let filteredTasks = allTasks.filter(t => {
-                if (currentTab === 'today') return t.task_date <= today;
-                if (currentTab === 'tomorrow') return t.task_date === tomorrow;
-                return true;
-            });
-
+            let filteredTasks = allTasks.filter(t => currentTab === 'today' ? t.task_date <= today : t.task_date === tomorrow);
             filteredTasks.sort((a, b) => a.priority - b.priority);
-
-            const taskItemHTML = t => `
+            const itemHTML = t => `
                 <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
                     <div class="flex items-center gap-4 flex-1">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} 
-                            onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
-                            class="cb-custom cb-p${t.priority}">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" class="cb-custom cb-p${t.priority}">
                         <div class="flex flex-col">
                             <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'}">${t.text}</span>
-                            <span class="text-[9px] font-bold tracking-tight" style="color: ${pColors[t.priority]}">STREAK: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
+                            <span class="text-[9px] font-bold" style="color: ${pColors[t.priority]}">STREAK: x${Math.pow(1.001, t.streak || 0).toFixed(4)}</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} p-1">
-                            <i class="fas fa-infinity text-lg"></i>
-                        </button>
+                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} p-1"><i class="fas fa-infinity text-lg"></i></button>
                         <button onclick="deleteTask(${t.id})" class="text-gray-300 p-1">✕</button>
                     </div>
                 </div>`;
-
-            activeDiv.innerHTML = filteredTasks.filter(t => !t.completed).map(taskItemHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
-            completedDiv.innerHTML = filteredTasks.filter(t => t.completed).map(taskItemHTML).join('');
+            activeDiv.innerHTML = filteredTasks.filter(t => !t.completed).map(itemHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
+            completedDiv.innerHTML = filteredTasks.filter(t => t.completed).map(itemHTML).join('');
             document.getElementById('completed-count').innerText = filteredTasks.filter(t => t.completed).length;
 
             if (currentTab === 'achievements') {
                 const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
                     acc[t.text] = acc[t.text] || { total: 0, maxStreak: 0 };
-                    acc[t.text].total++;
-                    acc[t.text].maxStreak = Math.max(acc[t.text].maxStreak, t.streak);
+                    acc[t.text].total++; acc[t.text].maxStreak = Math.max(acc[t.text].maxStreak, t.streak);
                     return acc;
                 }, {});
                 document.getElementById('achievement-list').innerHTML = Object.entries(summary).sort((a,b) => b[1].total - a[1].total).map(([name, data]) => `
                     <div class="bg-white p-4 rounded-xl flex justify-between items-center border-l-4 border-indigo-500 shadow-sm">
-                        <div>
-                            <p class="font-bold text-sm text-gray-800">${name}</p>
-                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">Hệ số: x${Math.pow(1.001, data.maxStreak).toFixed(4)}</p>
-                        </div>
+                        <div><p class="font-bold text-sm text-gray-800">${name}</p><p class="text-[9px] text-gray-400 font-bold uppercase">Hệ số: x${Math.pow(1.001, data.maxStreak).toFixed(4)}</p></div>
                         <div class="bg-indigo-50 text-indigo-600 font-black px-3 py-1 rounded-lg text-sm">${data.total}x</div>
                     </div>`).join('');
             }
         }
 
-        async function toggleInfinity(id, currentStatus) { await client.from('tasks').update({ is_recurring: !currentStatus }).eq('id', id); fetchTasks(); }
+        async function toggleInfinity(id, status) { await client.from('tasks').update({ is_recurring: !status }).eq('id', id); fetchTasks(); }
         async function deleteTask(id) { if (confirm('Xóa?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); } }
-        
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -352,27 +293,13 @@
             render();
         }
 
-        function animateNumber(id, val) {
-            const el = document.getElementById(id); const start = parseFloat(el.innerText) || 0;
-            const duration = 1000; let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                el.innerText = (progress * (val - start) + start).toFixed(2);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
         async function runDailySync() {
             const today = getLocalYYYYMMDD(0);
             const updates = []; const inserts = [];
             allTasks.forEach(t => {
                 if (!t.completed && t.task_date < today) updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
-                if (t.is_recurring && t.task_date < today) {
-                    if (!allTasks.some(x => x.text === t.text && x.task_date === today)) {
-                        inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: today, streak: t.streak, is_recurring: true }]));
-                    }
+                if (t.is_recurring && t.task_date < today && !allTasks.some(x => x.text === t.text && x.task_date === today)) {
+                    inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: today, streak: t.streak, is_recurring: true }]));
                 }
             });
             if (updates.length || inserts.length) { await Promise.all([...updates, ...inserts]); fetchTasks(); }
