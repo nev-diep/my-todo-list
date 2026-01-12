@@ -11,7 +11,21 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; -webkit-tap-highlight-color: transparent; }
-        
+        /* Checkbox viền màu theo Priority */
+.cb-p1 { border-color: #ef4444; } /* Viền đỏ */
+.cb-p1:checked { background-color: #ef4444; }
+
+.cb-p2 { border-color: #fb923c; } /* Viền cam */
+.cb-p2:checked { background-color: #fb923c; }
+
+.cb-p3 { border-color: #60a5fa; } /* Viền xanh dương */
+.cb-p3:checked { background-color: #60a5fa; }
+
+.cb-p4 { border-color: #9ca3af; } /* Viền xám */
+.cb-p4:checked { background-color: #9ca3af; }
+
+/* Hiệu ứng khi đã xong thì làm mờ viền */
+input:checked { border-color: transparent !important; }
         /* 1, 3. Header & Medal Slot */
         .score-header {
             position: fixed; top: 0; left: 0; right: 0; height: 80px;
@@ -263,7 +277,7 @@ function shootPoint(e, points) {
                 if (currentTab === 'tomorrow') return t.task_date === tomorrow;
                 return true;
             });
-
+filtered.sort((a, b) => a.priority - b.priority);
             const activeOnes = filteredTasks.filter(t => !t.completed);
             const doneOnes = filteredTasks.filter(t => t.completed);
 
@@ -281,11 +295,12 @@ function shootPoint(e, points) {
                 
                 const sortedList = Object.entries(summary).sort((a,b) => b[1].total - a[1].total);
                 document.getElementById('achievement-list').innerHTML = sortedList.map(([name, data]) => `
-                    <div class="bg-white p-4 rounded-xl flex justify-between items-center border-l-4 border-indigo-500 shadow-sm">
-                        <div>
-                            <p class="font-bold text-sm text-gray-800">${name}</p>
-                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">Hệ số đạt được: x${Math.pow(1.001, data.maxStreak).toFixed(4)}</p>
-                        </div>
+<div class="flex justify-between mb-6 px-2">
+    <button onclick="setPriority(1, '#ef4444')" class="p-btn w-12 h-12 rounded-full border-4 border-transparent active:scale-90 transition flex items-center justify-center bg-red-50" style="border-color: #ef4444;" data-p="1">🔴</button>
+    <button onclick="setPriority(2, '#fb923c')" class="p-btn w-12 h-12 rounded-full border-4 border-transparent active:scale-90 transition flex items-center justify-center bg-orange-50" data-p="2">🟡</button>
+    <button onclick="setPriority(3, '#60a5fa')" class="p-btn w-12 h-12 rounded-full border-4 border-transparent active:scale-90 transition flex items-center justify-center bg-blue-50" data-p="3">🔵</button>
+    <button onclick="setPriority(4, '#9ca3af')" class="p-btn w-12 h-12 rounded-full border-4 border-transparent active:scale-90 transition flex items-center justify-center bg-gray-50" data-p="4">⚪</button>
+</div>
                         <div class="bg-indigo-50 text-indigo-600 font-black px-3 py-1 rounded-lg text-sm">${data.total}x</div>
                     </div>`).join('');
             }
