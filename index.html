@@ -173,7 +173,7 @@
         <div class="flex-1 relative">
             <input type="text" id="inline-task-input" 
                 class="w-full text-lg font-semibold outline-none bg-transparent" 
-                placeholder="Nhiệm vụ mới..."
+                placeholder="Add Task"
                 list="task-history"
                 autocomplete="off"
                 oninput="handleInputSearch(this.value)"
@@ -241,7 +241,33 @@ function showInlineAdd() {
     tempPriority = 4;
     document.getElementById('current-p-dot').style.borderColor = '#9ca3af';
 }
-
+document.addEventListener('mousedown', function(e) {
+    const container = document.getElementById('inline-add-container');
+    const input = document.getElementById('inline-task-input');
+    
+    // Nếu ô nhập đang hiện và người dùng click ra ngoài vùng 'inline-card'
+    if (!container.classList.contains('hidden')) {
+        const isClickInside = document.getElementById('inline-card').contains(e.target);
+        
+        if (!isClickInside) {
+            const text = input.value.trim();
+            if (text === "") {
+                // Trường hợp 1: Không có chữ -> Hủy ngay
+                container.classList.add('hidden');
+            } else {
+                // Trường hợp 2: Có chữ -> Yêu cầu chọn Priority hoặc Hủy
+                const confirmCancel = confirm("Bạn chưa chọn Priority để lưu. Nhấn 'OK' để tiếp tục chọn màu, hoặc 'Cancel' để xóa task này.");
+                if (!confirmCancel) {
+                    container.classList.add('hidden');
+                    input.value = '';
+                } else {
+                    // Để người dùng ở lại chọn Priority
+                    input.focus();
+                }
+            }
+        }
+    }
+});
 function togglePriorityMenu() {
     document.getElementById('priority-menu').classList.toggle('active');
 }
