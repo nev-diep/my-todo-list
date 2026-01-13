@@ -286,16 +286,15 @@ function setTempPriority(p, color) {
 
 async function handleInputSearch(val) {
     const suggestionsDiv = document.getElementById('custom-suggestions');
-    const inputVal = val.trim();
-    const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' }; // Map emoji theo priority
-    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+    const inputVal = val.trim().toLowerCase();
+    const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' };
+
     if (!inputVal) {
         suggestionsDiv.innerHTML = '';
         suggestionsDiv.classList.add('hidden');
         return;
     }
 
-    // Lọc danh sách task duy nhất từ quá khứ
     const historyMap = new Map();
     allTasks.forEach(t => {
         const textLower = t.text.toLowerCase();
@@ -304,14 +303,15 @@ async function handleInputSearch(val) {
         }
     });
 
+    // Lọc chính xác các task bắt đầu bằng chữ cái đã nhập
     const filtered = Array.from(historyMap.values()).filter(h => 
         h.text.toLowerCase().startsWith(inputVal)
     ).slice(0, 5);
 
-if (filtered.length > 0) {
+    if (filtered.length > 0) {
         suggestionsDiv.innerHTML = filtered.map(h => `
             <div class="p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer flex justify-between items-center" 
-                 onclick="selectSuggestion('${h.text.replace(/'/g, "\\'")}', ${h.priority}, '${pColors[h.priority]}')">
+                 onclick="selectAndSave('${h.text.replace(/'/g, "\\'")}', ${h.priority})">
                 <span class="text-sm font-medium text-gray-700">${h.text}</span>
                 <span class="text-lg">${pEmojis[h.priority]}</span>
             </div>
@@ -322,15 +322,16 @@ if (filtered.length > 0) {
     }
 }
 
-// Hàm bổ trợ khi người dùng click chọn một gợi ý từ bảng
-function selectSuggestion(text, priority, color) {
-    const input = document.getElementById('inline-task-input');
-    input.value = text;
-    tempPriority = priority;
-    
-    document.getElementById('current-p-dot').style.borderColor = color;
+async function selectAndSave(text, priority) {
+    // Ẩn bảng gợi ý ngay lập tức
     document.getElementById('custom-suggestions').classList.add('hidden');
-    input.focus();
+    
+    // Thực hiện lưu task luôn với text và priority cũ
+    await saveTask(text, priority);
+    
+    // Reset ô input và đóng container sau khi lưu thành công
+    document.getElementById('inline-task-input').value = '';
+    document.getElementById('inline-add-container').classList.add('hidden');
 }
 
 async function saveTask(text, priority) {
