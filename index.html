@@ -584,22 +584,18 @@ async function saveWithPriority(p, color) {
                 });
             }
         };
-        // Xử lý ẩn Bottom Nav khi hiện bàn phím trên PWA
-const inlineInput = document.getElementById('inline-task-input');
-const bottomNav = document.querySelector('.bottom-nav');
-const addBtn = document.querySelector('.add-btn-floating');
+// Ngăn chặn bottom-nav bị đẩy lên khi hiện bàn phím trên PWA
+const inlineTaskInput = document.getElementById('inline-task-input');
+const navBar = document.querySelector('.bottom-nav');
 
-inlineInput.addEventListener('focus', () => {
-    // Ẩn thanh điều hướng và nút Add để dành chỗ cho bàn phím và bảng gợi ý
-    bottomNav.style.display = 'none';
-    if(addBtn) addBtn.style.display = 'none';
-});
-
-inlineInput.addEventListener('blur', () => {
-    // Hiện lại khi không còn nhập liệu
-    bottomNav.style.display = 'flex';
-    if(addBtn) addBtn.style.display = 'flex';
-});
+if (inlineTaskInput && navBar) {
+    inlineTaskInput.addEventListener('focus', () => {
+        navBar.style.visibility = 'hidden'; // Ẩn hẳn để nhường chỗ cho gợi ý
+    });
+    inlineTaskInput.addEventListener('blur', () => {
+        navBar.style.visibility = 'visible';
+    });
+}
     </script>
 </body>
 </html>
