@@ -109,7 +109,7 @@
     .add-btn-floating:active { 
     transform: scale(0.88); 
     }
-    .priority-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid; cursor: pointer; flex-shrink: 0; }
+    .priority-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid; cursor: pointer; flex-shrink: 0; }
     .priority-popover {
         display: none; position: absolute; bottom: 120%; right: 0;
         background: white; padding: 10px; border-radius: 15px;
@@ -181,12 +181,12 @@
             <datalist id="task-history"></datalist>
         </div>
         <div class="relative flex items-center gap-2"> <span class="text-[12px] text-[#007AFF] tracking-tight">Priority</span>
-            <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
+            <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #007AFF;"></div>
             <div id="priority-menu" class="priority-popover">
-                <button type="button" onclick="setTempPriority(1, '#ef4444')">🔴</button>
-                <button type="button" onclick="setTempPriority(2, '#fb923c')">🟡</button>
-                <button type="button" onclick="setTempPriority(3, '#60a5fa')">🔵</button>
-                <button type="button" onclick="setTempPriority(4, '#9ca3af')">⚪</button>
+                <button type="button" onclick="saveWithPriority(1, '#ef4444')">🔴</button>
+                <button type="button" onclick="saveWithPriority(2, '#fb923c')">🟡</button>
+                <button type="button" onclick="saveWithPriority(3, '#60a5fa')">🔵</button>
+                <button type="button" onclick="saveWithPriority(4, '#9ca3af')">⚪</button>
             </div>
         </div>
     </div>
@@ -291,7 +291,22 @@ async function saveTask(text, priority) {
     document.getElementById('inline-add-container').classList.add('hidden');
     fetchTasks();
 }
-
+async function saveWithPriority(p, color) {
+    const input = document.getElementById('inline-task-input');
+    const text = input.value.trim();
+    
+    if (text) {
+        // Nếu có chữ thì lưu ngay với độ ưu tiên vừa chọn
+        await saveTask(text, p);
+        document.getElementById('priority-menu').classList.remove('active');
+    } else {
+        // Nếu chưa nhập chữ mà lỡ click chọn màu, thì chỉ đổi màu viền để chờ nhập sau
+        tempPriority = p;
+        document.getElementById('current-p-dot').style.borderColor = color;
+        document.getElementById('priority-menu').classList.remove('active');
+        input.focus();
+    }
+}
         async function handleInlineKey(e) {
             if (e.key === 'Enter') {
                 const text = e.target.value.trim();
