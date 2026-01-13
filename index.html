@@ -55,7 +55,7 @@
         position: fixed; bottom: 0; left: 0; right: 0; 
         height: auto;
         background: white; border-top: 1px solid #e5e7eb;
-        display: flex; justify-content: space-around; 
+        display: flex; justify-content: center; 
         align-items: center;
         padding-top: 8px;
         padding-bottom: calc(2px + env(safe-area-inset-bottom));
@@ -63,25 +63,35 @@
     }
 
     .nav-item { 
-        color: #8E8E93; 
-        display: flex; flex-direction: column; align-items: center; justify-content: flex-end; transition: color 0.2s ease;
-        flex: 1; -webkit-tap-highlight-color: transparent; height: 40px;
+        color: #8E8E93; /* Màu xám Apple */
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center; /* Căn giữa để icon và chữ cân đối */
+        transition: color 0.2s ease;
+        flex: 1; 
+        height: 44px; /* Tăng nhẹ lên 44px (chuẩn Apple touch target) */
+        background: none; border: none; outline: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .nav-item.active { 
         color: #007AFF !important;
+    }
     .nav-item.active i, 
     .nav-item.active span {
         color: #007AFF;
     }
-        .nav-item i {
-        font-size: 22px; /* Kích thước icon lớn hơn một chút để rõ nét */
+    .nav-item i {
+        font-size: 22px;
         margin-bottom: 2px;
+        display: block;
     }
 
     .nav-item span {
         font-size: 10px;
-        font-weight: 500; /* Apple thường dùng Medium cho chữ ở bottom nav */
+        font-weight: 500;
         letter-spacing: -0.2px;
+        display: block;
     }
     .floating-point {
         position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
@@ -90,15 +100,19 @@
 
 .add-btn-floating {
         position: fixed; 
-        /* Hạ thấp nút Add tương ứng với thanh Bottom mới */
-        bottom: calc(60px + env(safe-area-inset-bottom)); 
+        /* Khoảng cách an toàn so với Bottom Nav */
+        bottom: calc(70px + env(safe-area-inset-bottom)); 
         left: 20px;
-        width: 50px; height: 50px; /* Thu nhỏ nút Add 1 chút cho cân đối */
+        width: 50px; height: 50px;
         background: #4f46e5;
-        border-radius: 15px; color: white; display: flex;
-        align-items: center; justify-content: center; font-size: 18px;
+        border-radius: 15px; color: white; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 18px;
         z-index: 1001;
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        transition: transform 0.2s;
     }
+    .add-btn-floating:active { transform: scale(0.9); }
 </style>
 </head>
 <body>
