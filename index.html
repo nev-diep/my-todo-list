@@ -148,7 +148,6 @@
 <div id="inline-add-container" class="mb-3 hidden">
     <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
         <div class="w-[22px] h-[22px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
-        
         <div class="flex-1 relative">
             <input type="text" id="inline-task-input" 
                 class="w-full text-lg font-semibold outline-none bg-transparent" 
@@ -157,10 +156,8 @@
                 autocomplete="off"
                 oninput="handleInputSearch(this.value)"
                 onkeydown="handleInlineKey(event)">
-            
             <datalist id="task-history"></datalist>
         </div>
-        
         <div class="relative">
             <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
             <div id="priority-menu" class="priority-popover">
@@ -275,32 +272,61 @@ async function saveWithPriority(p, color) {
 }
 
 // Cập nhật lại handleInlineKey để dùng hàm saveTask chung
-async function handleInlineKey(e) {
-    if (e.key === 'Enter') {
-        const text = e.target.value.trim();
-        await saveTask(text, tempPriority);
-    } else if (e.key === 'Escape') {
-        document.getElementById('inline-add-container').classList.add('hidden');
+// Hàm xử lý gợi ý: Chỉ hiện task bắt đầu bằng ký tự đã gõ
+async function handleInputSearch(val) {
+    const datalist = document.getElementById('task-history');
+    const inputVal = val.trim();
+    if (!inputVal) {
+        datalist.innerHTML = '';
+        return;
+    }
+
+    // Tạo danh sách task duy nhất từ lịch sử
+    const historyMap = new Map();
+    allTasks.forEach(t => {
+        const textLower = t.text.toLowerCase();
+        if (!historyMap.has(textLower)) {
+            historyMap.set(textLower, { text: t.text, priority: t.priority });
+        }
+    });
+
+    // LOGIC MỚI: Sử dụng startsWith thay vì includes
+    const filtered = Array.from(historyMap.values()).filter(h => 
+        h.text.toLowerCase().startsWith(inputVal.toLowerCase())
+    );
+
+    datalist.innerHTML = filtered
+        .map(h => `<option value="${h.text}">`)
+        .join('');
+
+    // KIỂM TRA: Nếu người dùng chọn từ danh sách (khớp hoàn toàn) thì Save ngay
+    const matchedTask = historyMap.get(inputVal.toLowerCase());
+    // Kiểm tra thêm điều kiện val === matchedTask.text để xác nhận đây là thao tác chọn từ gợi ý
+    if (matchedTask && val === matchedTask.text) { 
+        await saveTask(matchedTask.text, matchedTask.priority);
     }
 }
-        function showInlineAdd() {
-            const container = document.getElementById('inline-add-container');
-            container.classList.remove('hidden');
-            const input = document.getElementById('inline-task-input');
-            input.focus();
-            tempPriority = 4;
-            document.getElementById('current-p-dot').style.borderColor = '#9ca3af';
-        }
 
-        function togglePriorityMenu() {
-            document.getElementById('priority-menu').classList.toggle('active');
-        }
+// Hàm lưu Task chung (giữ nguyên logic Apple Style)
+async function saveTask(text, priority) {
+    if (!text) return;
+    const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
+    await client.from('tasks').insert([{ text, priority: priority, task_date: targetDate, streak: 0 }]);
+    
+    // Reset và đóng ô nhập
+    document.getElementById('inline-task-input').value = '';
+    document.getElementById('inline-add-container').classList.add('hidden');
+    fetchTasks();
+}
 
-        function setInlinePriority(p, color) {
-            tempPriority = p;
-            document.getElementById('current-p-dot').style.borderColor = color;
-            document.getElementById('priority-menu').classList.remove('active');
-        }
+// Lưu ngay khi chọn Priority
+async function saveWithPriority(p, color) {
+    const text = document.getElementById('inline-task-input').value.trim();
+    if (text) {
+        await saveTask(text, p);
+    }
+    document.getElementById('priority-menu').classList.remove('active');
+}
 
         async function handleInlineKey(e) {
             if (e.key === 'Enter') {
