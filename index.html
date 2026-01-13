@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <title>0.1% Discipline Pro</title>
     
     <link rel="manifest" href="manifest.json">
@@ -53,7 +54,7 @@
         background: white; border-top: 1px solid #e5e7eb;
         display: flex; justify-content: center; 
         align-items: flex-start;
-        padding-top: 8px;
+        padding-bottom: env(safe-area-inset-bottom);
         z-index: 1000;
     }
 
@@ -322,17 +323,18 @@ async function handleInputSearch(val) {
 }
 
 async function selectAndSave(text, priority) {
-    // Ẩn bảng gợi ý ngay lập tức
+    // Đảm bảo priority là số và không null
+    const validP = parseInt(priority) || 4; 
+    const input = document.getElementById('inline-task-input');
+    
+    // Lưu ngay lập tức
+    await saveTask(text, validP);
+    
+    // Đóng giao diện
     document.getElementById('custom-suggestions').classList.add('hidden');
-    
-    // Thực hiện lưu task luôn với text và priority cũ
-    await saveTask(text, priority);
-    
-    // Reset ô input và đóng container sau khi lưu thành công
-    document.getElementById('inline-task-input').value = '';
+    input.value = '';
     document.getElementById('inline-add-container').classList.add('hidden');
 }
-
 async function saveTask(text, priority) {
     if (!text) return;
     const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
