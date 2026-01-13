@@ -22,8 +22,9 @@
         color: #1f2937; 
         -webkit-tap-highlight-color: transparent;
         position: fixed; overflow: hidden; 
-        height: 100vh;
+        height: 100%;
         width: 100%;
+        overscroll-behavior-y: none;
     }
     
 .score-header {
@@ -53,9 +54,9 @@
         height: calc(50px + env(safe-area-inset-bottom));
         background: white; border-top: 1px solid #e5e7eb;
         display: flex; justify-content: center; 
-        align-items: flex-start;
+        align-items: center;
         padding-bottom: env(safe-area-inset-bottom);
-        z-index: 1000;
+        z-index: 9999;
     }
 
     .nav-item { 
