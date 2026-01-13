@@ -104,7 +104,7 @@
         bottom: calc(70px + env(safe-area-inset-bottom)); 
         left: 20px;
         width: 50px; height: 50px;
-        background: #4f46e5;
+        background: #007AFF;
         border-radius: 15px; color: white; 
         display: flex; align-items: center; justify-content: center; 
         font-size: 18px;
@@ -341,8 +341,6 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button onclick="toggleInfinity(${t.id}, ${t.is_recurring})" class="${t.is_recurring ? 'text-indigo-500' : 'text-gray-200'} p-1">
-                            <i class="fas fa-infinity text-lg"></i>
                         </button>
                         <button onclick="deleteTask(${t.id})" class="text-gray-300 p-1">✕</button>
                     </div>
@@ -370,7 +368,6 @@
             }
         }
 
-        async function toggleInfinity(id, currentStatus) { await client.from('tasks').update({ is_recurring: !currentStatus }).eq('id', id); fetchTasks(); }
         async function deleteTask(id) { if (confirm('Xóa?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); } }
         
         function switchTab(tab) {
@@ -400,11 +397,6 @@
             const updates = []; const inserts = [];
             allTasks.forEach(t => {
                 if (!t.completed && t.task_date < today) updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
-                if (t.is_recurring && t.task_date < today) {
-                    if (!allTasks.some(x => x.text === t.text && x.task_date === today)) {
-                        inserts.push(client.from('tasks').insert([{ text: t.text, priority: t.priority, task_date: today, streak: t.streak, is_recurring: true }]));
-                    }
-                }
             });
             if (updates.length || inserts.length) { await Promise.all([...updates, ...inserts]); fetchTasks(); }
         }
