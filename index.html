@@ -368,7 +368,7 @@ async function saveWithPriority(p, color) {
                 const p = calculatePoints(t.priority, t.streak);
                 if (t.completed) return sum + p;
                 // Nếu task chưa xong và thuộc ngày hôm nay (hoặc quá khứ đã dời sang hôm nay)
-                if (t.task_date <= today) return sum - p;
+                if (t.task_date < today) return sum - p;
                 return sum;
             }, 0);
             animateNumber('total-score', totalScore);
