@@ -584,18 +584,6 @@ async function saveWithPriority(p, color) {
                 });
             }
         };
-// Ngăn chặn bottom-nav bị đẩy lên khi hiện bàn phím trên PWA
-const inlineTaskInput = document.getElementById('inline-task-input');
-const navBar = document.querySelector('.bottom-nav');
-
-if (inlineTaskInput && navBar) {
-    inlineTaskInput.addEventListener('focus', () => {
-        navBar.style.visibility = 'hidden'; // Ẩn hẳn để nhường chỗ cho gợi ý
-    });
-    inlineTaskInput.addEventListener('blur', () => {
-        navBar.style.visibility = 'visible';
-    });
-}
     </script>
 </body>
 </html>
