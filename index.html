@@ -287,6 +287,7 @@ function setTempPriority(p, color) {
 async function handleInputSearch(val) {
     const suggestionsDiv = document.getElementById('custom-suggestions');
     const inputVal = val.trim();
+    const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' }; // Map emoji theo priority
     const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
     if (!inputVal) {
         suggestionsDiv.innerHTML = '';
@@ -304,15 +305,15 @@ async function handleInputSearch(val) {
     });
 
     const filtered = Array.from(historyMap.values()).filter(h => 
-        h.text.toLowerCase().includes(inputVal.toLowerCase())
-    ).slice(0, 5); // Hiển thị tối đa 5 gợi ý
+        h.text.toLowerCase().startsWith(inputVal)
+    ).slice(0, 5);
 
-    if (filtered.length > 0) {
+if (filtered.length > 0) {
         suggestionsDiv.innerHTML = filtered.map(h => `
             <div class="p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer flex justify-between items-center" 
-                 onclick="selectSuggestion('${h.text.replace(/'/g, "\\'")}', ${h.priority})">
+                 onclick="selectSuggestion('${h.text.replace(/'/g, "\\'")}', ${h.priority}, '${pColors[h.priority]}')">
                 <span class="text-sm font-medium text-gray-700">${h.text}</span>
-                <span class="text-[10px] text-gray-400">Past Priority: ${h.priority}</span>
+                <span class="text-lg">${pEmojis[h.priority]}</span>
             </div>
         `).join('');
         suggestionsDiv.classList.remove('hidden');
