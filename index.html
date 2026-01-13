@@ -58,15 +58,16 @@
         background: white; border-top: 1px solid #e5e7eb;
         display: flex; justify-content: space-around; 
         /* Căn icon sát lên trên cùng của thanh Bottom */
-        align-items: flex-start; 
-        padding-top: 0px; 
+        align-items: flex-end; 
+        padding-bottom: calc(5px + env(safe-area-inset-bottom));
+        padding-top: 0; 
         z-index: 1000;
     }
 
     .nav-item { 
         color: #9ca3af; 
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        flex: 1; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+        flex: 1; height: 40px;
     }
     
     .floating-point {
