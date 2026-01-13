@@ -20,7 +20,6 @@
         background-color: #f9fafb; 
         color: #1f2937; 
         -webkit-tap-highlight-color: transparent;
-        /* Ngăn toàn bộ trang bị cuộn nảy (bounce) trên iOS */
         position: fixed; overflow: hidden; 
         height: 100vh;
         width: 100%;
@@ -28,27 +27,23 @@
     
 .score-header {
         position: fixed; top: 0; left: 0; right: 0; 
-        /* Chiều cao tính từ safe-area xuống đáy là 45px */
         height: calc(45px + env(safe-area-inset-top)); 
         background: rgba(255, 255, 255, 0.95); 
         backdrop-filter: blur(10px);
         display: flex; 
-        /* Căn nội dung sát xuống đáy của Header */
         align-items: flex-end; 
         justify-content: space-between;
-        /* Padding bottom nhỏ để chữ không chạm sát vạch kẻ dưới */
         padding: 0 20px 8px 20px; 
         z-index: 1000; border-bottom: 1px solid #e5e7eb;
     }
 
     main { 
         position: absolute;
-        /* Khớp chính xác với chiều cao mới */
         top: calc(45px + env(safe-area-inset-top));
         bottom: calc(45px + env(safe-area-inset-bottom));
         left: 0; right: 0;
         overflow-y: auto;
-        padding: 15px 16px; /* Giảm padding cho gọn */
+        padding: 15px 16px;
         -webkit-overflow-scrolling: touch;
     }
 
@@ -64,14 +59,14 @@
     }
 
     .nav-item { 
-        color: #8E8E93; /* Màu xám Apple */
+        color: #8E8E93;
         display: flex; 
         flex-direction: column; 
         align-items: center; 
-        justify-content: center; /* Căn giữa để icon và chữ cân đối */
+        justify-content: center;
         transition: color 0.2s ease;
         flex: 1; 
-        height: 44px; /* Tăng nhẹ lên 44px (chuẩn Apple touch target) */
+        height: 44px;
         background: none; border: none; outline: none;
         -webkit-tap-highlight-color: transparent;
     }
@@ -101,7 +96,6 @@
 
 .add-btn-floating {
         position: fixed; 
-        /* Khoảng cách an toàn so với Bottom Nav */
         bottom: calc(70px + env(safe-area-inset-bottom)); 
         left: 20px;
         width: 56px; height: 56px;
@@ -122,6 +116,33 @@
         box-shadow: 0 5px 20px rgba(0,0,0,0.1); gap: 10px; z-index: 100;
     }
     .priority-popover.active { display: flex; }
+
+    /* Custom Checkbox Color */
+    .task-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border: 2px solid;
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        transition: all 0.2s;
+    }
+    .task-checkbox:checked {
+        background-color: currentColor;
+    }
+    .task-checkbox:checked::after {
+        content: "\f00c";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        color: white;
+        font-size: 12px;
+    }
 </style>
 </head>
 <body>
@@ -161,10 +182,10 @@
         <div class="relative">
             <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
             <div id="priority-menu" class="priority-popover">
-                <button onclick="saveWithPriority(1, '#ef4444')">🔴</button>
-                <button onclick="saveWithPriority(2, '#fb923c')">🟡</button>
-                <button onclick="saveWithPriority(3, '#60a5fa')">🔵</button>
-                <button onclick="saveWithPriority(4, '#9ca3af')">⚪</button>
+                <button type="button" onclick="setTempPriority(1, '#ef4444')">🔴</button>
+                <button type="button" onclick="setTempPriority(2, '#fb923c')">🟡</button>
+                <button type="button" onclick="setTempPriority(3, '#60a5fa')">🔵</button>
+                <button type="button" onclick="setTempPriority(4, '#9ca3af')">⚪</button>
             </div>
         </div>
     </div>
@@ -209,7 +230,7 @@
         let allTasks = [];
         let currentTab = 'today';
         let tempPriority = 4;
-// Hàm hiển thị ô nhập và focus ngay lập tức
+
 function showInlineAdd() {
     const container = document.getElementById('inline-add-container');
     container.classList.remove('hidden');
@@ -220,59 +241,16 @@ function showInlineAdd() {
     document.getElementById('current-p-dot').style.borderColor = '#9ca3af';
 }
 
-// Hàm xử lý gợi ý và lưu ngay khi chọn từ danh sách
-async function handleInputSearch(val) {
-    const datalist = document.getElementById('task-history');
-    const inputVal = val.trim();
-    if (!inputVal) return;
-
-    // Lấy danh sách task duy nhất từ lịch sử
-    const historyMap = new Map();
-    allTasks.forEach(t => {
-        if (!historyMap.has(t.text.toLowerCase())) {
-            historyMap.set(t.text.toLowerCase(), { text: t.text, priority: t.priority });
-        }
-    });
-
-    datalist.innerHTML = Array.from(historyMap.values())
-        .filter(h => h.text.toLowerCase().includes(inputVal.toLowerCase()))
-        .map(h => `<option value="${h.text}">`)
-        .join('');
-
-    // KIỂM TRA: Nếu người dùng vừa click chọn từ gợi ý (input khớp hoàn toàn)
-    const matchedTask = historyMap.get(inputVal.toLowerCase());
-    if (matchedTask && matchedTask.text === val) { 
-        // Nếu chọn từ list, lấy priority cũ và save ngay
-        await saveTask(matchedTask.text, matchedTask.priority);
-    }
+function togglePriorityMenu() {
+    document.getElementById('priority-menu').classList.toggle('active');
 }
 
-// Hàm Save chung
-async function saveTask(text, priority) {
-    if (!text) return;
-    const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
-    await client.from('tasks').insert([{ text, priority: priority, task_date: targetDate, streak: 0 }]);
-    
-    // Reset UI
-    document.getElementById('inline-task-input').value = '';
-    document.getElementById('inline-add-container').classList.add('hidden');
-    fetchTasks();
-}
-
-// Hàm dành riêng cho việc chọn Priority là Save luôn
-async function saveWithPriority(p, color) {
+function setTempPriority(p, color) {
     tempPriority = p;
     document.getElementById('current-p-dot').style.borderColor = color;
     document.getElementById('priority-menu').classList.remove('active');
-    
-    const text = document.getElementById('inline-task-input').value.trim();
-    if (text) {
-        await saveTask(text, p);
-    }
 }
 
-// Cập nhật lại handleInlineKey để dùng hàm saveTask chung
-// Hàm xử lý gợi ý: Chỉ hiện task bắt đầu bằng ký tự đã gõ
 async function handleInputSearch(val) {
     const datalist = document.getElementById('task-history');
     const inputVal = val.trim();
@@ -281,7 +259,6 @@ async function handleInputSearch(val) {
         return;
     }
 
-    // Tạo danh sách task duy nhất từ lịch sử
     const historyMap = new Map();
     allTasks.forEach(t => {
         const textLower = t.text.toLowerCase();
@@ -290,7 +267,6 @@ async function handleInputSearch(val) {
         }
     });
 
-    // LOGIC MỚI: Sử dụng startsWith thay vì includes
     const filtered = Array.from(historyMap.values()).filter(h => 
         h.text.toLowerCase().startsWith(inputVal.toLowerCase())
     );
@@ -299,44 +275,27 @@ async function handleInputSearch(val) {
         .map(h => `<option value="${h.text}">`)
         .join('');
 
-    // KIỂM TRA: Nếu người dùng chọn từ danh sách (khớp hoàn toàn) thì Save ngay
     const matchedTask = historyMap.get(inputVal.toLowerCase());
-    // Kiểm tra thêm điều kiện val === matchedTask.text để xác nhận đây là thao tác chọn từ gợi ý
     if (matchedTask && val === matchedTask.text) { 
         await saveTask(matchedTask.text, matchedTask.priority);
     }
 }
 
-// Hàm lưu Task chung (giữ nguyên logic Apple Style)
 async function saveTask(text, priority) {
     if (!text) return;
     const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
     await client.from('tasks').insert([{ text, priority: priority, task_date: targetDate, streak: 0 }]);
     
-    // Reset và đóng ô nhập
     document.getElementById('inline-task-input').value = '';
     document.getElementById('inline-add-container').classList.add('hidden');
     fetchTasks();
-}
-
-// Lưu ngay khi chọn Priority
-async function saveWithPriority(p, color) {
-    const text = document.getElementById('inline-task-input').value.trim();
-    if (text) {
-        await saveTask(text, p);
-    }
-    document.getElementById('priority-menu').classList.remove('active');
 }
 
         async function handleInlineKey(e) {
             if (e.key === 'Enter') {
                 const text = e.target.value.trim();
                 if (!text) return;
-                const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
-                await client.from('tasks').insert([{ text, priority: tempPriority, task_date: targetDate, streak: 0 }]);
-                e.target.value = '';
-                document.getElementById('inline-add-container').classList.add('hidden');
-                fetchTasks();
+                await saveTask(text, tempPriority);
             } else if (e.key === 'Escape') {
                 document.getElementById('inline-add-container').classList.add('hidden');
                 e.target.value = '';
@@ -367,7 +326,6 @@ async function saveWithPriority(p, color) {
             const totalScore = allTasks.reduce((sum, t) => {
                 const p = calculatePoints(t.priority, t.streak);
                 if (t.completed) return sum + p;
-                // Nếu task chưa xong và thuộc ngày hôm nay (hoặc quá khứ đã dời sang hôm nay)
                 if (t.task_date < today) return sum - p;
                 return sum;
             }, 0);
@@ -418,10 +376,8 @@ async function saveWithPriority(p, color) {
             let currentStreak = streak || 0;
             if (isChecking) {
                 shootPoint(e, calculatePoints(priority, currentStreak), priority);
-                currentStreak += 1; // Streak tăng khi hoàn thành
+                currentStreak += 1;
             }
-            // Khi hủy hoàn thành, chúng ta có thể giữ nguyên streak hoặc giảm tùy triết lý, 
-            // ở đây ta giữ logic cơ bản: chỉ tăng khi hoàn thành.
             await client.from('tasks').update({ 
                 completed: isChecking, 
                 streak: currentStreak,
@@ -435,6 +391,7 @@ async function saveWithPriority(p, color) {
             const completedDiv = document.getElementById('completed-tasks');
             const today = getLocalYYYYMMDD(0);
             const tomorrow = getLocalYYYYMMDD(1);
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
 
             let filteredTasks = allTasks.filter(t => {
                 if (currentTab === 'today') return t.task_date <= today;
@@ -445,15 +402,15 @@ async function saveWithPriority(p, color) {
             filteredTasks.sort((a, b) => a.priority - b.priority);
 
             const taskItemHTML = t => {
-                // Nhãn đỏ dành cho task dời từ hôm qua sang và chưa xong
                 const isDelayed = t.last_completed_at === 'was_delayed' && !t.completed;
+                const color = pColors[t.priority] || '#9ca3af';
                 
                 return `
                 <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm mb-3">
                     <div class="flex items-center gap-4 flex-1">
-                        <input type="checkbox" ${t.completed ? 'checked' : ''} 
+                        <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} 
                             onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
-                            style="width:22px; height:22px;">
+                            style="color: ${color}; border-color: ${color};">
                         <div class="flex flex-col">
                             <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'} font-semibold">${t.text}</span>
                             ${isDelayed ? 
@@ -526,14 +483,13 @@ async function saveWithPriority(p, color) {
                     const diffDays = Math.floor((todayDate - taskDate) / (1000 * 60 * 60 * 24));
 
                     if (diffDays > 0) {
-                        // Tính streak mới: giảm tương ứng với số ngày bỏ lỡ
                         const newStreak = Math.max(0, (t.streak || 0) - diffDays);
                         updates.push(
                             client.from('tasks')
                                 .update({ 
                                     task_date: todayStr, 
                                     streak: newStreak,
-                                    last_completed_at: 'was_delayed' // Đánh dấu để hiển thị nhãn "Hôm qua"
+                                    last_completed_at: 'was_delayed'
                                 })
                                 .eq('id', t.id)
                         );
