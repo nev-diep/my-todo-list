@@ -1,288 +1,395 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0.1% Discipline Pro - Web</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            color: #1f2937;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-<title>0.1% Discipline Pro</title>
+        /* Header cố định */
+        .score-header {
+            height: 70px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+            z-index: 100;
+        }
 
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        /* Vùng nội dung chính có thể cuộn */
+        main { 
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        /* Bottom Nav cố định ở đáy */
+        .bottom-nav {
+            height: 65px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 100;
+        }
 
-<style>
-html, body { height: 100%; }
+        .nav-item { 
+            color: #8E8E93;
+            text-align: center;
+            flex: 1;
+            background: none; border: none; cursor: pointer;
+        }
+        .nav-item.active { color: #007AFF; }
+        .nav-item i { font-size: 20px; display: block; }
+        .nav-item span { font-size: 10px; font-weight: 600; text-transform: uppercase; }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f9fafb;
-    color: #1f2937;
-    -webkit-tap-highlight-color: transparent;
-    overflow: hidden;
-}
+        .add-btn-floating {
+            position: fixed; 
+            bottom: 85px; 
+            right: 20px;
+            width: 56px; height: 56px;
+            background: #007AFF;
+            border-radius: 50%; color: white; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+            border: none; cursor: pointer; transition: transform 0.2s;
+        }
+        .add-btn-floating:hover { transform: scale(1.05); }
 
-.score-header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: calc(45px + env(safe-area-inset-top));
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 0 20px 8px;
-    z-index: 1000;
-    border-bottom: 1px solid #e5e7eb;
-}
+        .priority-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid; cursor: pointer; }
+        .priority-popover {
+            display: none; position: absolute; bottom: 120%; right: 0;
+            background: white; padding: 10px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); gap: 10px; border: 1px solid #eee;
+        }
+        .priority-popover.active { display: flex; }
 
-main {
-    position: absolute;
-    top: calc(45px + env(safe-area-inset-top));
-    bottom: calc(50px + env(safe-area-inset-bottom));
-    left: 0; right: 0;
-    overflow-y: auto;
-    padding: 15px 16px;
-    -webkit-overflow-scrolling: touch;
-}
+        .task-checkbox {
+            appearance: none; -webkit-appearance: none;
+            width: 22px; height: 22px; border: 2px solid; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .task-checkbox:checked { background-color: currentColor; }
+        .task-checkbox:checked::after {
+            content: "\f00c"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            color: white; font-size: 11px;
+        }
 
-.bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: calc(50px + env(safe-area-inset-bottom));
-    background: white;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 9999;
-}
-
-.nav-item {
-    color: #8E8E93;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: color .2s ease;
-    flex: 1;
-    height: 44px;
-    background: none;
-    border: none;
-}
-
-.nav-item.active { color: #007AFF !important; }
-
-.add-btn-floating {
-    position: fixed;
-    bottom: calc(70px + env(safe-area-inset-bottom));
-    left: 20px;
-    width: 56px; height: 56px;
-    background: #007AFF;
-    border-radius: 50%;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    z-index: 10001;
-    transition: transform .2s;
-}
-
-.add-btn-floating:active { transform: scale(.88); }
-
-.floating-point {
-    position: fixed;
-    font-weight: 900;
-    pointer-events: none;
-    font-size: 3rem;
-    opacity: 0;
-    z-index: 10002;
-    transition: transform .8s cubic-bezier(.22,1,.36,1), opacity .4s;
-}
-
-.task-checkbox {
-    appearance: none;
-    width: 22px; height: 22px;
-    border: 2px solid;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.task-checkbox:checked {
-    background-color: currentColor;
-}
-
-.task-checkbox:checked::after {
-    content: "\f00c";
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    color: white;
-    font-size: 12px;
-}
-</style>
+        .floating-point {
+            position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
+            font-size: 2.5rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
+        }
+    </style>
 </head>
-
 <body>
 
 <header class="score-header">
     <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center border">
+        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
             <i class="fas fa-medal text-indigo-400"></i>
         </div>
         <div>
-            <p class="text-[9px] font-bold text-gray-400 uppercase">Discipline Score</p>
-            <h1 id="total-score" class="text-2xl font-extrabold">0</h1>
+            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Discipline Score</p>
+            <h1 id="total-score" class="text-2xl font-extrabold text-gray-800 leading-none">0</h1>
         </div>
     </div>
-    <p id="rank-title" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full uppercase">ĐANG TÍNH...</p>
+    <p id="rank-title" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full uppercase">KHỞI ĐẦU</p>
 </header>
 
 <main>
-<div id="task-view">
-<h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase mb-4">HÔM NAY</h2>
+    <div id="task-view">
+        <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">HÔM NAY</h2>
+        
+        <div id="inline-add-container" class="mb-5 hidden">
+            <div id="inline-card" class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-3 shadow-sm relative">
+                <div class="flex-1 relative">
+                    <input type="text" id="inline-task-input" 
+                        class="w-full text-lg font-semibold outline-none bg-transparent" 
+                        placeholder="Thêm nhiệm vụ..." autocomplete="off"
+                        oninput="handleInputSearch(this.value)"
+                        onkeydown="if(event.key==='Enter') saveWithPriority(tempPriority)">
+                    
+                    <div id="custom-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 hidden z-[1002] overflow-hidden"></div>
+                </div>
+                <div class="relative flex items-center gap-2"> 
+                    <span class="text-[12px] text-gray-400">Priority</span>
+                    <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
+                    <div id="priority-menu" class="priority-popover">
+                        <button onclick="saveWithPriority(1)">🔴</button>
+                        <button onclick="saveWithPriority(2)">🟡</button>
+                        <button onclick="saveWithPriority(3)">🔵</button>
+                        <button onclick="saveWithPriority(4)">⚪</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div id="inline-add-container" class="mb-3 hidden">
-<div id="inline-card" class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex gap-4 shadow-md relative">
-    <div class="w-[22px] h-[22px] rounded-full border-2"></div>
-    <div class="flex-1 relative">
-        <input id="inline-task-input"
-               class="w-full text-lg font-semibold outline-none bg-transparent"
-               placeholder="Add Task"
-               autocomplete="off"
-               oninput="handleInputSearch(this.value)"
-               onkeydown="handleInlineKey(event)">
-        <div id="custom-suggestions"
-             class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl hidden z-[1002]"></div>
+        <div id="active-tasks" class="space-y-3"></div>
+        
+        <details class="mt-8 group" id="completed-section">
+            <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-200/30 p-3 rounded-xl">
+                <i class="fas fa-chevron-right transition-transform group-open:rotate-90"></i>
+                <span>ĐÃ XONG (<span id="completed-count">0</span>)</span>
+            </summary>
+            <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
+        </details>
     </div>
-</div>
-</div>
 
-<div id="active-tasks"></div>
-</div>
+    <div id="achievements-view" class="hidden">
+        <h2 class="text-lg font-extrabold mb-5">Thành Tựu Ranks</h2>
+        <div id="achievement-list" class="space-y-3"></div>
+    </div>
 </main>
 
 <button onclick="showInlineAdd()" class="add-btn-floating">
-<i class="fas fa-plus"></i>
+    <i class="fas fa-plus"></i>
 </button>
 
 <nav class="bottom-nav">
-<button onclick="switchTab('today')" id="btn-today" class="nav-item active">
-<i class="fas fa-calendar-check"></i><span class="text-[9px]">Today</span>
-</button>
-<button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item">
-<i class="fas fa-calendar-plus"></i><span class="text-[9px]">Next</span>
-</button>
-<button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item">
-<i class="fas fa-award"></i><span class="text-[9px]">Ranks</span>
-</button>
+    <button onclick="switchTab('today')" id="btn-today" class="nav-item active">
+        <i class="fas fa-calendar-check"></i><span>Today</span>
+    </button>
+    <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item">
+        <i class="fas fa-calendar-plus"></i><span>Next</span>
+    </button>
+    <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item">
+        <i class="fas fa-award"></i><span>Ranks</span>
+    </button>
 </nav>
 
 <script>
-const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
-const SB_KEY = 'ANON_KEY_ONLY';
-const client = supabase.createClient(SB_URL, SB_KEY);
+    const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
+    const client = supabase.createClient(SB_URL, SB_KEY);
 
-let allTasks = [];
-let currentTab = 'today';
+    let allTasks = [];
+    let currentTab = 'today';
+    let tempPriority = 4;
 
-function getLocalYYYYMMDD(offset = 0) {
-    const d = new Date();
-    d.setDate(d.getDate() + offset);
-    return d.getFullYear() + '-' +
-        String(d.getMonth() + 1).padStart(2, '0') + '-' +
-        String(d.getDate()).padStart(2, '0');
-}
+    // --- LOGIC UI ---
+    function showInlineAdd() {
+        const container = document.getElementById('inline-add-container');
+        container.classList.remove('hidden');
+        document.getElementById('inline-task-input').focus();
+    }
 
-function parseLocalDateYMD(s) {
-    if (!s) return null;
-    const [y,m,d] = s.split('-').map(Number);
-    return new Date(y, m-1, d);
-}
+    function togglePriorityMenu() {
+        document.getElementById('priority-menu').classList.toggle('active');
+    }
 
-function calculatePoints(priority, streak) {
-    const base = {1:4,2:3,3:2,4:1};
-    return base[priority||4] * Math.pow(1.001, streak||0);
-}
-
-async function fetchTasks() {
-    const { data } = await client.from('tasks').select('*');
-    allTasks = data || [];
-    render();
-}
-
-async function runDailySync() {
-    const todayStr = getLocalYYYYMMDD();
-    const todayDate = parseLocalDateYMD(todayStr);
-    const updates = [];
-
-    allTasks.forEach(t => {
-        if (!t.completed && t.task_date && t.task_date < todayStr) {
-            const diffDays = Math.floor(
-                (todayDate - parseLocalDateYMD(t.task_date)) / 86400000
-            );
-            if (diffDays > 0) {
-                updates.push(
-                    client.from('tasks')
-                        .update({
-                            task_date: todayStr,
-                            streak: Math.max(0, (t.streak||0) - diffDays),
-                            last_completed_at: 'was_delayed'
-                        })
-                        .eq('id', t.id)
-                );
-            }
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('btn-' + tab).classList.add('active');
+        document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
+        document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
+        if (tab !== 'achievements') {
+            document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'TIẾP THEO';
         }
-    });
+        render();
+    }
 
-    if (updates.length) {
-        await Promise.all(updates);
+    // --- LOGIC DATABASE ---
+    async function fetchTasks() {
+        const { data, error } = await client.from('tasks').select('*');
+        if (error) return;
+        allTasks = data || [];
+        updateHeader();
+        render();
+    }
+
+    async function saveTask(text, priority) {
+        if (!text) return;
+        const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
+        const { error } = await client.from('tasks').insert([{ 
+            text, 
+            priority: parseInt(priority) || 4, 
+            task_date: targetDate, 
+            streak: 0 
+        }]);
+        
+        if (!error) {
+            closeInput();
+            fetchTasks();
+        }
+    }
+
+    function closeInput() {
+        document.getElementById('inline-task-input').value = '';
+        document.getElementById('inline-add-container').classList.add('hidden');
+        document.getElementById('custom-suggestions').classList.add('hidden');
+        document.getElementById('priority-menu').classList.remove('active');
+    }
+
+    // --- LOGIC GỢI Ý & LƯU TỨC THÌ ---
+    function handleInputSearch(val) {
+        const suggestionsDiv = document.getElementById('custom-suggestions');
+        const inputVal = val.trim().toLowerCase();
+        if (!inputVal) { suggestionsDiv.classList.add('hidden'); return; }
+
+        const historyMap = new Map();
+        allTasks.forEach(t => {
+            const textLower = t.text.toLowerCase();
+            if (!historyMap.has(textLower)) historyMap.set(textLower, { text: t.text, priority: t.priority });
+        });
+
+        const filtered = Array.from(historyMap.values())
+            .filter(h => h.text.toLowerCase().startsWith(inputVal)).slice(0, 5);
+
+        if (filtered.length > 0) {
+            const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' };
+            suggestionsDiv.innerHTML = filtered.map(h => `
+                <div class="p-3 hover:bg-gray-50 border-b cursor-pointer flex justify-between items-center" 
+                     onclick="saveTask('${h.text.replace(/'/g, "\\'")}', ${h.priority})">
+                    <span class="text-sm font-medium text-gray-700">${h.text}</span>
+                    <span>${pEmojis[h.priority]}</span>
+                </div>
+            `).join('');
+            suggestionsDiv.classList.remove('hidden');
+        } else {
+            suggestionsDiv.classList.add('hidden');
+        }
+    }
+
+    async function saveWithPriority(p) {
+        const text = document.getElementById('inline-task-input').value.trim();
+        if (text) await saveTask(text, p);
+    }
+
+    async function toggleTask(id, currentStatus, priority, streak, e) {
+        const newStatus = !currentStatus;
+        let newStreak = streak || 0;
+        if (newStatus) {
+            shootPoint(e, calculatePoints(priority, newStreak), priority);
+            newStreak++;
+        }
+        await client.from('tasks').update({ 
+            completed: newStatus, 
+            streak: newStreak,
+            last_completed_at: newStatus ? getLocalYYYYMMDD(0) : null
+        }).eq('id', id);
         fetchTasks();
     }
-}
 
-function render() {
-    const today = getLocalYYYYMMDD();
-    const active = document.getElementById('active-tasks');
+    async function deleteTask(id) {
+        if (confirm('Xóa nhiệm vụ này?')) {
+            await client.from('tasks').delete().eq('id', id);
+            fetchTasks();
+        }
+    }
 
-    const tasks = allTasks.filter(t =>
-        currentTab === 'today'
-            ? t.task_date && t.task_date <= today
-            : true
-    );
+    // --- UTILS ---
+    function getLocalYYYYMMDD(offset = 0) {
+        const d = new Date();
+        d.setDate(d.getDate() + offset);
+        return d.toISOString().split('T')[0];
+    }
 
-    active.innerHTML = tasks.map(t => `
-        <div class="bg-white p-4 rounded-xl flex gap-4">
-            <input type="checkbox"
-                   class="task-checkbox"
-                   aria-label="Hoàn thành"
-                   ${t.completed?'checked':''}>
-            <span>${t.text}</span>
-        </div>
-    `).join('');
-}
+    function calculatePoints(p, s) {
+        const base = { 1: 4, 2: 3, 3: 2, 4: 1 };
+        return base[p || 4] * Math.pow(1.001, s || 0);
+    }
 
-function switchTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-    document.getElementById('btn-'+tab).classList.add('active');
-    render();
-}
+    function updateHeader() {
+        const today = getLocalYYYYMMDD(0);
+        const score = allTasks.reduce((sum, t) => {
+            const p = calculatePoints(t.priority, t.streak);
+            if (t.completed) return sum + p;
+            if (t.task_date < today) return sum - p;
+            return sum;
+        }, 0);
+        
+        document.getElementById('total-score').innerText = score.toFixed(2);
+        const rank = document.getElementById('rank-title');
+        if (score > 2100) rank.innerText = "KỶ LUẬT (3 THÁNG)";
+        else if (score > 500) rank.innerText = "BỀN BỈ (1 THÁNG)";
+        else rank.innerText = score > 0 ? "TẬP SỰ" : "KHỞI ĐẦU";
+    }
 
-window.onload = async () => {
-    await fetchTasks();
-    await runDailySync();
-};
+    function shootPoint(e, points, priority) {
+        const colors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+        const el = document.createElement('div');
+        el.className = 'floating-point';
+        el.innerHTML = `+${points.toFixed(2)}`;
+        el.style.color = colors[priority];
+        el.style.left = e.clientX + 'px';
+        el.style.top = e.clientY + 'px';
+        document.body.appendChild(el);
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+            el.style.transform = `translateY(-100px) scale(1.2)`;
+        });
+        setTimeout(() => el.remove(), 1000);
+    }
+
+    function render() {
+        const activeDiv = document.getElementById('active-tasks');
+        const completedDiv = document.getElementById('completed-tasks');
+        const today = getLocalYYYYMMDD(0);
+        const tomorrow = getLocalYYYYMMDD(1);
+        const colors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+
+        const filtered = allTasks.filter(t => {
+            if (currentTab === 'today') return t.task_date <= today;
+            return t.task_date === tomorrow;
+        }).sort((a, b) => a.priority - b.priority);
+
+        const taskHTML = t => `
+            <div class="bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-4">
+                    <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} 
+                        onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
+                        style="color: ${colors[t.priority]}; border-color: ${colors[t.priority]};">
+                    <div class="flex flex-col">
+                        <span class="${t.completed ? 'line-through text-gray-300' : 'text-gray-700'} font-semibold">${t.text}</span>
+                        ${t.task_date < today && !t.completed ? '<span class="text-[9px] text-red-500 font-bold">TRỄ</span>' : ''}
+                    </div>
+                </div>
+                <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
+            </div>`;
+
+        activeDiv.innerHTML = filtered.filter(t => !t.completed).map(taskHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
+        completedDiv.innerHTML = filtered.filter(t => t.completed).map(taskHTML).join('');
+        document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
+
+        if (currentTab === 'achievements') {
+            const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                acc[t.text] = (acc[t.text] || 0) + 1; return acc;
+            }, {});
+            document.getElementById('achievement-list').innerHTML = Object.entries(summary).map(([name, count]) => `
+                <div class="bg-white p-4 rounded-xl flex justify-between border-l-4 border-indigo-500 shadow-sm">
+                    <span class="font-bold text-sm">${name}</span>
+                    <span class="text-indigo-600 font-black">${count}x</span>
+                </div>`).join('');
+        }
+    }
+
+    window.onload = fetchTasks;
 </script>
-
 </body>
 </html>
