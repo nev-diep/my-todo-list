@@ -246,27 +246,26 @@ document.addEventListener('mousedown', function(e) {
     const container = document.getElementById('inline-add-container');
     const input = document.getElementById('inline-task-input');
     const card = document.getElementById('inline-card');
-    const priorityMenu = document.getElementById('priority-menu');
+    const suggestionsDiv = document.getElementById('custom-suggestions');
     
     if (container && !container.classList.contains('hidden')) {
-        // Kiểm tra nếu click nằm ngoài vùng card trắng
+        // Nếu click vào bảng gợi ý, không làm gì cả (để hàm selectSuggestion xử lý)
+        if (suggestionsDiv.contains(e.target)) return;
+
         const isClickInside = card.contains(e.target);
         
         if (!isClickInside) {
             const text = input.value.trim();
             if (text === "") {
-                // Không có chữ -> Ẩn ngay
                 container.classList.add('hidden');
-                priorityMenu.classList.remove('active');
+                suggestionsDiv.classList.add('hidden');
             } else {
-                // Có chữ -> Hỏi trước khi hủy
-                // Dùng setTimeout để tránh xung đột với các click event khác
                 setTimeout(() => {
-                    const confirmCancel = confirm("Bạn chưa chọn Priority để lưu. Nhấn 'OK' để tiếp tục chọn màu, hoặc 'Cancel' để xóa task này.");
+                    const confirmCancel = confirm("Please choose Priority");
                     if (!confirmCancel) {
                         container.classList.add('hidden');
                         input.value = '';
-                        priorityMenu.classList.remove('active');
+                        suggestionsDiv.classList.add('hidden');
                     } else {
                         input.focus();
                     }
