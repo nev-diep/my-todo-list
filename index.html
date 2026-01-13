@@ -103,16 +103,19 @@
         /* Khoảng cách an toàn so với Bottom Nav */
         bottom: calc(70px + env(safe-area-inset-bottom)); 
         left: 20px;
-        width: 50px; height: 50px;
+        width: 56px; height: 56px;
         background: #007AFF;
-        border-radius: 15px; color: white; 
+        border-radius: 50%; color: white; 
         display: flex; align-items: center; justify-content: center; 
-        font-size: 18px;
+        font-size: 24px;
         z-index: 1001;
-        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
-        transition: transform 0.2s;
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s; border: none; outline: none; -webkit-tap-highlight-color: transparent;
     }
-    .add-btn-floating:active { transform: scale(0.9); }
+    .add-btn-floating:active { 
+    transform: scale(0.88); 
+    box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}
 </style>
 </head>
 <body>
