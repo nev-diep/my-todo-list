@@ -174,11 +174,11 @@
             <input type="text" id="inline-task-input" 
                 class="w-full text-lg font-semibold outline-none bg-transparent" 
                 placeholder="Add Task"
-                list="task-history"
                 autocomplete="off"
                 oninput="handleInputSearch(this.value)"
                 onkeydown="handleInlineKey(event)">
-            <datalist id="task-history"></datalist>
+            
+            <div id="custom-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 hidden z-[1002] overflow-hidden"></div>
         </div>
         <div class="relative flex items-center gap-2"> 
             <span class="text-[12px] text-[#007AFF] tracking-tight">Priority</span>
@@ -286,13 +286,16 @@ function setTempPriority(p, color) {
 }
 
 async function handleInputSearch(val) {
-    const datalist = document.getElementById('task-history');
+    const suggestionsDiv = document.getElementById('custom-suggestions');
     const inputVal = val.trim();
+
     if (!inputVal) {
-        datalist.innerHTML = '';
+        suggestionsDiv.innerHTML = '';
+        suggestionsDiv.classList.add('hidden');
         return;
     }
 
+    // Lọc danh sách task duy nhất từ quá khứ
     const historyMap = new Map();
     allTasks.forEach(t => {
         const textLower = t.text.toLowerCase();
@@ -302,17 +305,36 @@ async function handleInputSearch(val) {
     });
 
     const filtered = Array.from(historyMap.values()).filter(h => 
-        h.text.toLowerCase().startsWith(inputVal.toLowerCase())
-    );
+        h.text.toLowerCase().includes(inputVal.toLowerCase())
+    ).slice(0, 5); // Hiển thị tối đa 5 gợi ý
 
-    datalist.innerHTML = filtered
-        .map(h => `<option value="${h.text}">`)
-        .join('');
-
-    const matchedTask = historyMap.get(inputVal.toLowerCase());
-    if (matchedTask && val === matchedTask.text) { 
-        await saveTask(matchedTask.text, matchedTask.priority);
+    if (filtered.length > 0) {
+        suggestionsDiv.innerHTML = filtered.map(h => `
+            <div class="p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer flex justify-between items-center" 
+                 onclick="selectSuggestion('${h.text.replace(/'/g, "\\'")}', ${h.priority})">
+                <span class="text-sm font-medium text-gray-700">${h.text}</span>
+                <span class="text-[10px] text-gray-400">Past Priority: ${h.priority}</span>
+            </div>
+        `).join('');
+        suggestionsDiv.classList.remove('hidden');
+    } else {
+        suggestionsDiv.classList.add('hidden');
     }
+}
+
+// Hàm bổ trợ khi người dùng click chọn một gợi ý từ bảng
+function selectSuggestion(text, priority) {
+    const input = document.getElementById('inline-task-input');
+    input.value = text;
+    tempPriority = priority;
+    
+    // Cập nhật màu viền hình tròn theo priority cũ của task đó
+    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+    document.getElementById('current-p-dot').style.borderColor = pColors[priority];
+    
+    // Ẩn bảng gợi ý và focus lại vào input
+    document.getElementById('custom-suggestions').classList.add('hidden');
+    input.focus();
 }
 
 async function saveTask(text, priority) {
