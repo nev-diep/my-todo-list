@@ -28,9 +28,10 @@
     .score-header {
         position: fixed; top: 0; left: 0; right: 0; 
         /* Tăng chiều cao và căn giữa nội dung theo chiều dọc */
-        height: 60px; 
+        height: calc(50px + env(safe-area-inset-top)); 
         background: rgba(255, 255, 255, 0.95); 
         backdrop-filter: blur(10px);
+        padding-bottom: 5px;
         display: flex; align-items: center; justify-content: space-between;
         z-index: 1000; border-bottom: 1px solid #e5e7eb;
     }
@@ -38,8 +39,8 @@
     /* Quan trọng: Tạo khu vực cuộn riêng cho nội dung task */
     main { 
         position: absolute;
-        top: calc(70px + env(safe-area-inset-top));
-        bottom: calc(75px + env(safe-area-inset-bottom));
+        top: calc(50px + env(safe-area-inset-top));
+        bottom: calc(50px + env(safe-area-inset-bottom));
         left: 0; right: 0;
         overflow-y: auto; /* Chỉ cuộn khu vực này */
         padding: 20px 16px;
@@ -48,11 +49,12 @@
 
     .bottom-nav {
         position: fixed; bottom: 0; left: 0; right: 0; 
-        height: 60px;
+        height: calc(50px + env(safe-area-inset-bottom));
         background: white; border-top: 1px solid #e5e7eb;
         display: flex; justify-content: space-around; 
         /* Căn giữa icon và chữ theo chiều dọc */
-        align-items: center; 
+        align-items: flex-start; 
+        padding-top: 8px;
         z-index: 1000;
     }
 
