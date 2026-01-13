@@ -271,4 +271,18 @@ function render() {
     `).join('');
 }
 
-function switchTab(ta
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.getElementById('btn-'+tab).classList.add('active');
+    render();
+}
+
+window.onload = async () => {
+    await fetchTasks();
+    await runDailySync();
+};
+</script>
+
+</body>
+</html>
