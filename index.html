@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>0.1% Discipline Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -61,7 +66,6 @@
         .nav-item { color: #9ca3af; transition: all 0.2s; background: none; border: none; cursor: pointer; flex: 1; }
         .nav-item.active { color: #4f46e5; }
 
-        /* Priority Selector Style */
         .priority-dot { width: 24px; height: 24px; border-radius: 50%; border: 3px solid; cursor: pointer; transition: 0.2s; }
         .priority-popover { position: absolute; right: 0; top: 35px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: none; padding: 8px; flex-direction: column; gap: 8px; z-index: 50; }
         .priority-popover.active { display: flex; }
@@ -148,7 +152,6 @@
         let currentTab = 'today';
         let tempPriority = 4;
 
-        // Logic Input mới kiểu Apple Reminders
         function showInlineAdd() {
             const container = document.getElementById('inline-add-container');
             container.classList.remove('hidden');
@@ -362,7 +365,21 @@
             if (updates.length || inserts.length) { await Promise.all([...updates, ...inserts]); fetchTasks(); }
         }
 
-        window.onload = async () => { await fetchTasks(); await runDailySync(); };
+        window.onload = async () => { 
+            await fetchTasks(); 
+            await runDailySync(); 
+
+            // Đăng ký Service Worker cho PWA
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js').then(reg => {
+                        console.log('Service Worker đã sẵn sàng!', reg);
+                    }).catch(err => {
+                        console.log('Lỗi Service Worker:', err);
+                    });
+                });
+            }
+        };
     </script>
 </body>
 </html>
