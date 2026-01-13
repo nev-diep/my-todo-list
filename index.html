@@ -53,13 +53,12 @@
 
     .bottom-nav {
         position: fixed; bottom: 0; left: 0; right: 0; 
-        /* Chiều cao tính từ safe-area lên trần là 45px */
-        height: calc(45px + env(safe-area-inset-bottom));
+        height: auto;
         background: white; border-top: 1px solid #e5e7eb;
         display: flex; justify-content: space-around; 
-        /* Căn icon sát lên trên cùng của thanh Bottom */
-        align-items: flex-end; 
-        padding-bottom: calc(5px + env(safe-area-inset-bottom));
+        align-items: center;
+        padding-top: 8px;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
         z-index: 1000;
     }
 
