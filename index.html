@@ -145,25 +145,33 @@
         <div id="task-view">
             <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
             
-            <div id="inline-add-container" class="mb-3 hidden">
-                <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
-                    <div class="w-[26px] h-[26px] rounded-full border-3 border-gray-300"></div>
-                    <input type="text" id="inline-task-input" 
-                        class="flex-1 text-lg font-semibold outline-none bg-transparent" 
-                        placeholder="Nhiệm vụ mới..."
-                        onkeydown="handleInlineKey(event)">
-                    
-                    <div class="relative">
-                        <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
-                        <div id="priority-menu" class="priority-popover">
-                            <button onclick="setInlinePriority(1, '#ef4444')">🔴</button>
-                            <button onclick="setInlinePriority(2, '#fb923c')">🟡</button>
-                            <button onclick="setInlinePriority(3, '#60a5fa')">🔵</button>
-                            <button onclick="setInlinePriority(4, '#9ca3af')">⚪</button>
-                        </div>
-                    </div>
-                </div>
+<div id="inline-add-container" class="mb-3 hidden">
+    <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
+        <div class="w-[22px] h-[22px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
+        
+        <div class="flex-1 relative">
+            <input type="text" id="inline-task-input" 
+                class="w-full text-lg font-semibold outline-none bg-transparent" 
+                placeholder="Nhiệm vụ mới..."
+                list="task-history"
+                autocomplete="off"
+                oninput="handleInputSearch(this.value)"
+                onkeydown="handleInlineKey(event)">
+            
+            <datalist id="task-history"></datalist>
+        </div>
+        
+        <div class="relative">
+            <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
+            <div id="priority-menu" class="priority-popover">
+                <button onclick="saveWithPriority(1, '#ef4444')">🔴</button>
+                <button onclick="saveWithPriority(2, '#fb923c')">🟡</button>
+                <button onclick="saveWithPriority(3, '#60a5fa')">🔵</button>
+                <button onclick="saveWithPriority(4, '#9ca3af')">⚪</button>
             </div>
+        </div>
+    </div>
+</div>
 
             <div id="active-tasks" class="space-y-3"></div>
             <details class="mt-8 group" id="completed-section">
@@ -204,7 +212,77 @@
         let allTasks = [];
         let currentTab = 'today';
         let tempPriority = 4;
+// Hàm hiển thị ô nhập và focus ngay lập tức
+function showInlineAdd() {
+    const container = document.getElementById('inline-add-container');
+    container.classList.remove('hidden');
+    const input = document.getElementById('inline-task-input');
+    input.value = '';
+    input.focus();
+    tempPriority = 4;
+    document.getElementById('current-p-dot').style.borderColor = '#9ca3af';
+}
 
+// Hàm xử lý gợi ý và lưu ngay khi chọn từ danh sách
+async function handleInputSearch(val) {
+    const datalist = document.getElementById('task-history');
+    const inputVal = val.trim();
+    if (!inputVal) return;
+
+    // Lấy danh sách task duy nhất từ lịch sử
+    const historyMap = new Map();
+    allTasks.forEach(t => {
+        if (!historyMap.has(t.text.toLowerCase())) {
+            historyMap.set(t.text.toLowerCase(), { text: t.text, priority: t.priority });
+        }
+    });
+
+    datalist.innerHTML = Array.from(historyMap.values())
+        .filter(h => h.text.toLowerCase().includes(inputVal.toLowerCase()))
+        .map(h => `<option value="${h.text}">`)
+        .join('');
+
+    // KIỂM TRA: Nếu người dùng vừa click chọn từ gợi ý (input khớp hoàn toàn)
+    const matchedTask = historyMap.get(inputVal.toLowerCase());
+    if (matchedTask && matchedTask.text === val) { 
+        // Nếu chọn từ list, lấy priority cũ và save ngay
+        await saveTask(matchedTask.text, matchedTask.priority);
+    }
+}
+
+// Hàm Save chung
+async function saveTask(text, priority) {
+    if (!text) return;
+    const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
+    await client.from('tasks').insert([{ text, priority: priority, task_date: targetDate, streak: 0 }]);
+    
+    // Reset UI
+    document.getElementById('inline-task-input').value = '';
+    document.getElementById('inline-add-container').classList.add('hidden');
+    fetchTasks();
+}
+
+// Hàm dành riêng cho việc chọn Priority là Save luôn
+async function saveWithPriority(p, color) {
+    tempPriority = p;
+    document.getElementById('current-p-dot').style.borderColor = color;
+    document.getElementById('priority-menu').classList.remove('active');
+    
+    const text = document.getElementById('inline-task-input').value.trim();
+    if (text) {
+        await saveTask(text, p);
+    }
+}
+
+// Cập nhật lại handleInlineKey để dùng hàm saveTask chung
+async function handleInlineKey(e) {
+    if (e.key === 'Enter') {
+        const text = e.target.value.trim();
+        await saveTask(text, tempPriority);
+    } else if (e.key === 'Escape') {
+        document.getElementById('inline-add-container').classList.add('hidden');
+    }
+}
         function showInlineAdd() {
             const container = document.getElementById('inline-add-container');
             container.classList.remove('hidden');
