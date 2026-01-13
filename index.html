@@ -21,8 +21,9 @@
         color: #1f2937; 
         -webkit-tap-highlight-color: transparent;
         /* Ngăn toàn bộ trang bị cuộn nảy (bounce) trên iOS */
-        fixed; overflow: hidden; 
+        position: fixed; overflow: hidden; 
         height: 100vh;
+        width: 100%;
     }
     
 .score-header {
@@ -109,13 +110,18 @@
         display: flex; align-items: center; justify-content: center; 
         font-size: 24px;
         z-index: 1001;
-        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s; border: none; outline: none; -webkit-tap-highlight-color: transparent;
     }
     .add-btn-floating:active { 
     transform: scale(0.88); 
-    box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
-}
+    }
+    .priority-dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid; cursor: pointer; }
+    .priority-popover {
+        display: none; position: absolute; bottom: 120%; right: 0;
+        background: white; padding: 10px; border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1); gap: 10px; z-index: 100;
+    }
+    .priority-popover.active { display: flex; }
 </style>
 </head>
 <body>
@@ -257,7 +263,8 @@
             const totalScore = allTasks.reduce((sum, t) => {
                 const p = calculatePoints(t.priority, t.streak);
                 if (t.completed) return sum + p;
-                if (t.task_date < today) return sum - p;
+                // Nếu task chưa xong và thuộc ngày hôm nay (hoặc quá khứ đã dời sang hôm nay)
+                if (t.task_date <= today) return sum - p;
                 return sum;
             }, 0);
             animateNumber('total-score', totalScore);
@@ -299,30 +306,31 @@
 
             setTimeout(() => {
                 el.remove();
-                target.parentElement.classList.add('bump-animation');
-                setTimeout(() => target.parentElement.classList.remove('bump-animation'), 400);
             }, 1700);
         }
 
         async function toggleTask(id, status, priority, streak, e) {
             const isChecking = !status;
+            let currentStreak = streak || 0;
             if (isChecking) {
-                shootPoint(e, calculatePoints(priority, streak), priority);
-                streak = (streak || 0) + 1;
+                shootPoint(e, calculatePoints(priority, currentStreak), priority);
+                currentStreak += 1; // Streak tăng khi hoàn thành
             }
+            // Khi hủy hoàn thành, chúng ta có thể giữ nguyên streak hoặc giảm tùy triết lý, 
+            // ở đây ta giữ logic cơ bản: chỉ tăng khi hoàn thành.
             await client.from('tasks').update({ 
-                completed: isChecking, streak: streak,
+                completed: isChecking, 
+                streak: currentStreak,
                 last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null
             }).eq('id', id);
             fetchTasks();
         }
 
-function render() {
+        function render() {
             const activeDiv = document.getElementById('active-tasks');
             const completedDiv = document.getElementById('completed-tasks');
             const today = getLocalYYYYMMDD(0);
             const tomorrow = getLocalYYYYMMDD(1);
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
 
             let filteredTasks = allTasks.filter(t => {
                 if (currentTab === 'today') return t.task_date <= today;
@@ -333,20 +341,19 @@ function render() {
             filteredTasks.sort((a, b) => a.priority - b.priority);
 
             const taskItemHTML = t => {
-                // Logic kiểm tra task từ hôm trước đẩy sang
-                const isFromPast = t.task_date < today;
+                // Nhãn đỏ dành cho task dời từ hôm qua sang và chưa xong
+                const isDelayed = t.last_completed_at === 'was_delayed' && !t.completed;
                 
                 return `
                 <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm mb-3">
                     <div class="flex items-center gap-4 flex-1">
                         <input type="checkbox" ${t.completed ? 'checked' : ''} 
                             onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
-                            class="cb-custom cb-p${t.priority}">
+                            style="width:22px; height:22px;">
                         <div class="flex flex-col">
                             <span class="task-name ${t.completed ? 'line-through text-gray-300' : 'text-gray-700'} font-semibold">${t.text}</span>
-                            
-                            ${isFromPast && !t.completed ? 
-                                `<span class="text-[9px] font-extrabold text-red-100 uppercase tracking-wider mt-0.5">Hôm qua</span>` 
+                            ${isDelayed ? 
+                                `<span class="text-[9px] font-extrabold text-red-500 uppercase tracking-wider mt-0.5">Hôm qua</span>` 
                                 : ''}
                         </div>
                     </div>
@@ -388,7 +395,7 @@ function render() {
             document.getElementById('btn-' + tab).classList.add('active');
             document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
             document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
-            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'NGÀY MAI';
+            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'TIẾP THEO';
             render();
         }
 
@@ -405,25 +412,47 @@ function render() {
         }
 
         async function runDailySync() {
-            const today = getLocalYYYYMMDD(0);
-            const updates = []; const inserts = [];
+            const todayStr = getLocalYYYYMMDD(0);
+            const todayDate = new Date(todayStr);
+            const updates = [];
+
             allTasks.forEach(t => {
-                if (!t.completed && t.task_date < today) updates.push(client.from('tasks').update({ task_date: today }).eq('id', t.id));
+                if (!t.completed && t.task_date < todayStr) {
+                    const taskDate = new Date(t.task_date);
+                    const diffDays = Math.floor((todayDate - taskDate) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays > 0) {
+                        // Tính streak mới: giảm tương ứng với số ngày bỏ lỡ
+                        const newStreak = Math.max(0, (t.streak || 0) - diffDays);
+                        updates.push(
+                            client.from('tasks')
+                                .update({ 
+                                    task_date: todayStr, 
+                                    streak: newStreak,
+                                    last_completed_at: 'was_delayed' // Đánh dấu để hiển thị nhãn "Hôm qua"
+                                })
+                                .eq('id', t.id)
+                        );
+                    }
+                }
             });
-            if (updates.length || inserts.length) { await Promise.all([...updates, ...inserts]); fetchTasks(); }
+
+            if (updates.length) {
+                await Promise.all(updates);
+                await fetchTasks();
+            }
         }
 
         window.onload = async () => { 
             await fetchTasks(); 
             await runDailySync(); 
 
-            // Đăng ký Service Worker cho PWA
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('sw.js').then(reg => {
-                        console.log('Service Worker đã sẵn sàng!', reg);
+                        console.log('Service Worker ready');
                     }).catch(err => {
-                        console.log('Lỗi Service Worker:', err);
+                        console.log('Service Worker error', err);
                     });
                 });
             }
