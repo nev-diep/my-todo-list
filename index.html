@@ -287,7 +287,7 @@ function setTempPriority(p, color) {
 async function handleInputSearch(val) {
     const suggestionsDiv = document.getElementById('custom-suggestions');
     const inputVal = val.trim();
-
+    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
     if (!inputVal) {
         suggestionsDiv.innerHTML = '';
         suggestionsDiv.classList.add('hidden');
@@ -322,16 +322,12 @@ async function handleInputSearch(val) {
 }
 
 // Hàm bổ trợ khi người dùng click chọn một gợi ý từ bảng
-function selectSuggestion(text, priority) {
+function selectSuggestion(text, priority, color) {
     const input = document.getElementById('inline-task-input');
     input.value = text;
     tempPriority = priority;
     
-    // Cập nhật màu viền hình tròn theo priority cũ của task đó
-    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
-    document.getElementById('current-p-dot').style.borderColor = pColors[priority];
-    
-    // Ẩn bảng gợi ý và focus lại vào input
+    document.getElementById('current-p-dot').style.borderColor = color;
     document.getElementById('custom-suggestions').classList.add('hidden');
     input.focus();
 }
