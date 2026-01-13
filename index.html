@@ -63,11 +63,26 @@
     }
 
     .nav-item { 
-        color: #9ca3af; 
-        display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-        flex: 1; height: 40px;
+        color: #8E8E93; 
+        display: flex; flex-direction: column; align-items: center; justify-content: flex-end; transition: color 0.2s ease;
+        flex: 1; -webkit-tap-highlight-color: transparent; height: 40px;
     }
-    
+    .nav-item.active { 
+        color: #007AFF !important;
+    .nav-item.active i, 
+    .nav-item.active span {
+        color: #007AFF;
+    }
+        .nav-item i {
+        font-size: 22px; /* Kích thước icon lớn hơn một chút để rõ nét */
+        margin-bottom: 2px;
+    }
+
+    .nav-item span {
+        font-size: 10px;
+        font-weight: 500; /* Apple thường dùng Medium cho chữ ở bottom nav */
+        letter-spacing: -0.2px;
+    }
     .floating-point {
         position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
         font-size: 3rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
