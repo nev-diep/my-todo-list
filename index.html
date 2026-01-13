@@ -168,7 +168,7 @@
             <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
             
 <div id="inline-add-container" class="mb-3 hidden">
-    <div class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
+    <div id="inline-card" class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
         <div class="w-[22px] h-[22px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
         <div class="flex-1 relative">
             <input type="text" id="inline-task-input" 
@@ -180,7 +180,8 @@
                 onkeydown="handleInlineKey(event)">
             <datalist id="task-history"></datalist>
         </div>
-        <div class="relative flex items-center gap-2"> <span class="text-[12px] text-[#007AFF] tracking-tight">Priority</span>
+        <div class="relative flex items-center gap-2"> 
+            <span class="text-[12px] text-[#007AFF] tracking-tight">Priority</span>
             <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #007AFF;"></div>
             <div id="priority-menu" class="priority-popover">
                 <button type="button" onclick="saveWithPriority(1, '#ef4444')">🔴</button>
@@ -244,26 +245,32 @@ function showInlineAdd() {
 document.addEventListener('mousedown', function(e) {
     const container = document.getElementById('inline-add-container');
     const input = document.getElementById('inline-task-input');
+    const card = document.getElementById('inline-card');
+    const priorityMenu = document.getElementById('priority-menu');
     
-    // Nếu ô nhập đang hiện và người dùng click ra ngoài vùng 'inline-card'
-    if (!container.classList.contains('hidden')) {
-        const isClickInside = document.getElementById('inline-card').contains(e.target);
+    if (container && !container.classList.contains('hidden')) {
+        // Kiểm tra nếu click nằm ngoài vùng card trắng
+        const isClickInside = card.contains(e.target);
         
         if (!isClickInside) {
             const text = input.value.trim();
             if (text === "") {
-                // Trường hợp 1: Không có chữ -> Hủy ngay
+                // Không có chữ -> Ẩn ngay
                 container.classList.add('hidden');
+                priorityMenu.classList.remove('active');
             } else {
-                // Trường hợp 2: Có chữ -> Yêu cầu chọn Priority hoặc Hủy
-                const confirmCancel = confirm("Bạn chưa chọn Priority để lưu. Nhấn 'OK' để tiếp tục chọn màu, hoặc 'Cancel' để xóa task này.");
-                if (!confirmCancel) {
-                    container.classList.add('hidden');
-                    input.value = '';
-                } else {
-                    // Để người dùng ở lại chọn Priority
-                    input.focus();
-                }
+                // Có chữ -> Hỏi trước khi hủy
+                // Dùng setTimeout để tránh xung đột với các click event khác
+                setTimeout(() => {
+                    const confirmCancel = confirm("Bạn chưa chọn Priority để lưu. Nhấn 'OK' để tiếp tục chọn màu, hoặc 'Cancel' để xóa task này.");
+                    if (!confirmCancel) {
+                        container.classList.add('hidden');
+                        input.value = '';
+                        priorityMenu.classList.remove('active');
+                    } else {
+                        input.focus();
+                    }
+                }, 10);
             }
         }
     }
