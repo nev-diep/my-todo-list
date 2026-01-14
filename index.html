@@ -2,394 +2,561 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>0.1% Discipline Pro - Web</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>0.1% Discipline Pro</title>    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f3f4f6; 
-            color: #1f2937;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+<style>
+    body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #f9fafb; 
+        color: #1f2937; 
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+.score-header {
+        position: fixed; top: 0; left: 0; right: 0; 
+        height: 60px; 
+        background: rgba(255, 255, 255, 0.95); 
+        backdrop-filter: blur(10px);
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between;
+        padding: 0 20px 8px 20px; 
+        z-index: 1000; border-bottom: 1px solid #e5e7eb;
+    }
 
-        /* Header cố định */
-        .score-header {
-            height: 70px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 1px solid #e5e7eb;
-            flex-shrink: 0;
-            z-index: 100;
-        }
+    main { 
+        margin-top: 70px; margin-bottom: 80px;
+        overflow-y: auto;
+        padding: 15px 16px;
+        -webkit-overflow-scrolling: touch;
+    }
 
-        /* Vùng nội dung chính có thể cuộn */
-        main { 
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-        }
+    .bottom-nav {
+        position: fixed; bottom: 0; left: 0; right: 0; 
+        height: 60px;
+        background: white; border-top: 1px solid #e5e7eb;
+        display: flex; justify-content: center; 
+        align-items: center;
+        padding-top: 8px;
+        z-index: 1000;
+    }
 
-        /* Bottom Nav cố định ở đáy */
-        .bottom-nav {
-            height: 65px;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-shrink: 0;
-            z-index: 100;
-        }
+    .nav-item { 
+        color: #8E8E93;
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        justify-content: center;
+        transition: color 0.2s ease;
+        flex: 1; 
+        height: 44px;
+        background: none; border: none; outline: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item.active { 
+        color: #007AFF !important;
+    }
+    .nav-item.active i, 
+    .nav-item.active span {
+        color: #007AFF;
+    }
+    .nav-item i {
+        font-size: 22px;
+        margin-bottom: 2px;
+        display: block;
+    }
 
-        .nav-item { 
-            color: #8E8E93;
-            text-align: center;
-            flex: 1;
-            background: none; border: none; cursor: pointer;
-        }
-        .nav-item.active { color: #007AFF; }
-        .nav-item i { font-size: 20px; display: block; }
-        .nav-item span { font-size: 10px; font-weight: 600; text-transform: uppercase; }
+    .nav-item span {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: -0.2px;
+        display: block;
+    }
+    .floating-point {
+        position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
+        font-size: 3rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
+    }
 
-        .add-btn-floating {
-            position: fixed; 
-            bottom: 85px; 
-            right: 20px;
-            width: 56px; height: 56px;
-            background: #007AFF;
-            border-radius: 50%; color: white; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; box-shadow: 0 4px 12px rgba(0,122,255,0.3);
-            border: none; cursor: pointer; transition: transform 0.2s;
-        }
-        .add-btn-floating:hover { transform: scale(1.05); }
+.add-btn-floating {
+        position: fixed; 
+        bottom: 80px; 
+        left: 20px;
+        width: 56px; height: 56px;
+        background: #007AFF;
+        border-radius: 50%; color: white; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 24px;
+        z-index: 1001;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s; border: none; outline: none; -webkit-tap-highlight-color: transparent;
+    }
+    .add-btn-floating:active { 
+    transform: scale(0.88); 
+    }
+    .priority-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid; cursor: pointer; flex-shrink: 0; }
+    .priority-popover {
+        display: none; position: absolute; bottom: 120%; right: 0;
+        background: white; padding: 10px; border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1); gap: 10px; z-index: 100;
+    }
+    .priority-popover.active { display: flex; }
 
-        .priority-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid; cursor: pointer; }
-        .priority-popover {
-            display: none; position: absolute; bottom: 120%; right: 0;
-            background: white; padding: 10px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); gap: 10px; border: 1px solid #eee;
-        }
-        .priority-popover.active { display: flex; }
-
-        .task-checkbox {
-            appearance: none; -webkit-appearance: none;
-            width: 22px; height: 22px; border: 2px solid; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s; flex-shrink: 0;
-        }
-        .task-checkbox:checked { background-color: currentColor; }
-        .task-checkbox:checked::after {
-            content: "\f00c"; font-family: "Font Awesome 6 Free"; font-weight: 900;
-            color: white; font-size: 11px;
-        }
-
-        .floating-point {
-            position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
-            font-size: 2.5rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
-        }
-    </style>
+    /* Custom Checkbox Color */
+    .task-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border: 2px solid;
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .task-checkbox:checked {
+        background-color: currentColor;
+    }
+    .task-checkbox:checked::after {
+        content: "\f00c";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        color: white;
+        font-size: 12px;
+    }
+</style>
 </head>
 <body>
 
 <header class="score-header">
     <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100">
+        <div id="medal-container" class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center border border-indigo-100 flex-shrink-0">
             <i class="fas fa-medal text-indigo-400"></i>
         </div>
-        <div>
+        <div class="flex flex-col justify-center">
             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Discipline Score</p>
             <h1 id="total-score" class="text-2xl font-extrabold text-gray-800 leading-none">0</h1>
         </div>
     </div>
-    <p id="rank-title" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full uppercase">KHỞI ĐẦU</p>
+    <div class="flex items-center">
+        <p id="rank-title" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full uppercase">ĐANG TÍNH...</p>
+    </div>
 </header>
 
-<main>
-    <div id="task-view">
-        <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">HÔM NAY</h2>
-        
-        <div id="inline-add-container" class="mb-5 hidden">
-            <div id="inline-card" class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-3 shadow-sm relative">
-                <div class="flex-1 relative">
-                    <input type="text" id="inline-task-input" 
-                        class="w-full text-lg font-semibold outline-none bg-transparent" 
-                        placeholder="Thêm nhiệm vụ..." autocomplete="off"
-                        oninput="handleInputSearch(this.value)"
-                        onkeydown="if(event.key==='Enter') saveWithPriority(tempPriority)">
-                    
-                    <div id="custom-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 hidden z-[1002] overflow-hidden"></div>
-                </div>
-                <div class="relative flex items-center gap-2"> 
-                    <span class="text-[12px] text-gray-400">Priority</span>
-                    <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #9ca3af;"></div>
-                    <div id="priority-menu" class="priority-popover">
-                        <button onclick="saveWithPriority(1)">🔴</button>
-                        <button onclick="saveWithPriority(2)">🟡</button>
-                        <button onclick="saveWithPriority(3)">🔵</button>
-                        <button onclick="saveWithPriority(4)">⚪</button>
-                    </div>
-                </div>
+    <main>
+        <div id="task-view">
+            <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
+            
+<div id="inline-add-container" class="mb-3 hidden">
+    <div id="inline-card" class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
+        <div class="w-[22px] h-[22px] rounded-full border-2 border-gray-300 flex-shrink-0"></div>
+        <div class="flex-1 relative">
+            <input type="text" id="inline-task-input" 
+                class="w-full text-lg font-semibold outline-none bg-transparent" 
+                placeholder="Add Task"
+                autocomplete="off"
+                oninput="handleInputSearch(this.value)"
+                onkeydown="handleInlineKey(event)">
+            
+            <div id="custom-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 hidden z-[1002] overflow-hidden"></div>
+        </div>
+        <div class="relative flex items-center gap-2"> 
+            <span class="text-[12px] text-[#007AFF] tracking-tight">Priority</span>
+            <div id="current-p-dot" onclick="togglePriorityMenu()" class="priority-dot" style="border-color: #007AFF;"></div>
+            <div id="priority-menu" class="priority-popover">
+                <button type="button" onclick="saveWithPriority(1, '#ef4444')">🔴</button>
+                <button type="button" onclick="saveWithPriority(2, '#fb923c')">🟡</button>
+                <button type="button" onclick="saveWithPriority(3, '#60a5fa')">🔵</button>
+                <button type="button" onclick="saveWithPriority(4, '#9ca3af')">⚪</button>
             </div>
         </div>
-
-        <div id="active-tasks" class="space-y-3"></div>
-        
-        <details class="mt-8 group" id="completed-section">
-            <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-200/30 p-3 rounded-xl">
-                <i class="fas fa-chevron-right transition-transform group-open:rotate-90"></i>
-                <span>ĐÃ XONG (<span id="completed-count">0</span>)</span>
-            </summary>
-            <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
-        </details>
     </div>
+</div>
 
-    <div id="achievements-view" class="hidden">
-        <h2 class="text-lg font-extrabold mb-5">Thành Tựu Ranks</h2>
-        <div id="achievement-list" class="space-y-3"></div>
-    </div>
-</main>
+            <div id="active-tasks" class="space-y-3"></div>
+            <details class="mt-8 group" id="completed-section">
+                <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-100/50 p-3 rounded-xl select-none">
+                    <i class="fas fa-chevron-right transition-transform group-open:rotate-90 text-[10px]"></i>
+                    <span>ĐÃ XONG (<span id="completed-count">0</span>)</span>
+                </summary>
+                <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
+            </details>
+        </div>
+        <div id="achievements-view" class="hidden">
+            <h2 class="text-lg font-extrabold mb-5">Thành Tựu Kỷ Luật</h2>
+            <div id="achievement-list" class="space-y-3"></div>
+        </div>
+    </main>
 
-<button onclick="showInlineAdd()" class="add-btn-floating">
-    <i class="fas fa-plus"></i>
-</button>
-
-<nav class="bottom-nav">
-    <button onclick="switchTab('today')" id="btn-today" class="nav-item active">
-        <i class="fas fa-calendar-check"></i><span>Today</span>
+    <button onclick="showInlineAdd()" class="add-btn-floating">
+        <i class="fas fa-plus"></i>
     </button>
-    <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item">
-        <i class="fas fa-calendar-plus"></i><span>Next</span>
-    </button>
-    <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item">
-        <i class="fas fa-award"></i><span>Ranks</span>
-    </button>
-</nav>
 
-<script>
-    const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
-    const client = supabase.createClient(SB_URL, SB_KEY);
+    <nav class="bottom-nav">
+        <button onclick="switchTab('today')" id="btn-today" class="nav-item active flex flex-col items-center">
+            <i class="fas fa-calendar-check text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Today</span>
+        </button>
+        <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center">
+            <i class="fas fa-calendar-plus text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Next</span>
+        </button>
+        <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex flex-col items-center">
+            <i class="fas fa-award text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Ranks</span>
+        </button>
+    </nav>
 
-    let allTasks = [];
-    let currentTab = 'today';
-    let tempPriority = 4;
+    <script>
+        const SB_URL = 'https://cyfchiajwmbnlptibpxd.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5ZmNoaWFqd21ibmxwdGlicHhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NjAwMTgsImV4cCI6MjA4MzQzNjAxOH0.ax5y3HpY6rE0IgKyXkd1VU3oDdnH3N0YDNwXDBBZy5g';
+        const client = supabase.createClient(SB_URL, SB_KEY);
 
-    // --- LOGIC UI ---
-    function showInlineAdd() {
-        const container = document.getElementById('inline-add-container');
-        container.classList.remove('hidden');
-        document.getElementById('inline-task-input').focus();
-    }
+        let allTasks = [];
+        let currentTab = 'today';
+        let tempPriority = 4;
 
-    function togglePriorityMenu() {
-        document.getElementById('priority-menu').classList.toggle('active');
-    }
+function showInlineAdd() {
+    const container = document.getElementById('inline-add-container');
+    container.classList.remove('hidden');
+    const input = document.getElementById('inline-task-input');
+    input.value = '';
+    input.focus();
+    tempPriority = 4;
+    document.getElementById('current-p-dot').style.borderColor = '#9ca3af';
+}
+document.addEventListener('mousedown', function(e) {
+    const container = document.getElementById('inline-add-container');
+    const input = document.getElementById('inline-task-input');
+    const card = document.getElementById('inline-card');
+    const suggestionsDiv = document.getElementById('custom-suggestions');
+    
+    if (container && !container.classList.contains('hidden')) {
+        // Nếu click vào bảng gợi ý, không làm gì cả (để hàm selectSuggestion xử lý)
+        if (suggestionsDiv.contains(e.target)) return;
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('btn-' + tab).classList.add('active');
-        document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
-        document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
-        if (tab !== 'achievements') {
-            document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'TIẾP THEO';
-        }
-        render();
-    }
-
-    // --- LOGIC DATABASE ---
-    async function fetchTasks() {
-        const { data, error } = await client.from('tasks').select('*');
-        if (error) return;
-        allTasks = data || [];
-        updateHeader();
-        render();
-    }
-
-    async function saveTask(text, priority) {
-        if (!text) return;
-        const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
-        const { error } = await client.from('tasks').insert([{ 
-            text, 
-            priority: parseInt(priority) || 4, 
-            task_date: targetDate, 
-            streak: 0 
-        }]);
+        const isClickInside = card.contains(e.target);
         
-        if (!error) {
-            closeInput();
-            fetchTasks();
+        if (!isClickInside) {
+            const text = input.value.trim();
+            if (text === "") {
+                container.classList.add('hidden');
+                suggestionsDiv.classList.add('hidden');
+            } else {
+                setTimeout(() => {
+                    const confirmCancel = confirm("Please choose Priority");
+                    if (!confirmCancel) {
+                        container.classList.add('hidden');
+                        input.value = '';
+                        suggestionsDiv.classList.add('hidden');
+                    } else {
+                        input.focus();
+                    }
+                }, 10);
+            }
         }
     }
+});
+function togglePriorityMenu() {
+    document.getElementById('priority-menu').classList.toggle('active');
+}
 
-    function closeInput() {
-        document.getElementById('inline-task-input').value = '';
-        document.getElementById('inline-add-container').classList.add('hidden');
-        document.getElementById('custom-suggestions').classList.add('hidden');
+async function handleInputSearch(val) {
+    const suggestionsDiv = document.getElementById('custom-suggestions');
+    const inputVal = val.trim().toLowerCase();
+    const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' };
+
+    if (!inputVal) {
+        suggestionsDiv.innerHTML = '';
+        suggestionsDiv.classList.add('hidden');
+        return;
+    }
+
+    const historyMap = new Map();
+    allTasks.forEach(t => {
+        const textLower = t.text.toLowerCase();
+        if (!historyMap.has(textLower)) {
+            historyMap.set(textLower, { text: t.text, priority: t.priority });
+        }
+    });
+
+    // Lọc chính xác các task bắt đầu bằng chữ cái đã nhập
+    const filtered = Array.from(historyMap.values()).filter(h => 
+        h.text.toLowerCase().startsWith(inputVal)
+    ).slice(0, 5);
+
+    if (filtered.length > 0) {
+        suggestionsDiv.innerHTML = filtered.map(h => `
+            <div class="p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer flex justify-between items-center" 
+                 onclick="selectAndSave('${h.text.replace(/'/g, "\\'")}', ${h.priority})">
+                <span class="text-sm font-medium text-gray-700">${h.text}</span>
+                <span class="text-lg">${pEmojis[h.priority]}</span>
+            </div>
+        `).join('');
+        suggestionsDiv.classList.remove('hidden');
+    } else {
+        suggestionsDiv.classList.add('hidden');
+    }
+}
+
+async function selectAndSave(text, priority) {
+    // Ẩn bảng gợi ý ngay lập tức
+    document.getElementById('custom-suggestions').classList.add('hidden');
+    
+    // Thực hiện lưu task luôn với text và priority cũ
+    await saveTask(text, priority);
+    
+    // Reset ô input và đóng container sau khi lưu thành công
+    document.getElementById('inline-task-input').value = '';
+    document.getElementById('inline-add-container').classList.add('hidden');
+}
+
+async function saveTask(text, priority) {
+    if (!text) return;
+    const targetDate = (currentTab === 'tomorrow') ? getLocalYYYYMMDD(1) : getLocalYYYYMMDD(0);
+    await client.from('tasks').insert([{ text, priority: priority, task_date: targetDate, streak: 0 }]);
+    
+    document.getElementById('inline-task-input').value = '';
+    document.getElementById('inline-add-container').classList.add('hidden');
+    fetchTasks();
+}
+async function saveWithPriority(p, color) {
+    const input = document.getElementById('inline-task-input');
+    const text = input.value.trim();
+    
+    if (text) {
+        // Nếu có chữ thì lưu ngay với độ ưu tiên vừa chọn
+        await saveTask(text, p);
         document.getElementById('priority-menu').classList.remove('active');
+    } else {
+        // Nếu chưa nhập chữ mà lỡ click chọn màu, thì chỉ đổi màu viền để chờ nhập sau
+        tempPriority = p;
+        document.getElementById('current-p-dot').style.borderColor = color;
+        document.getElementById('priority-menu').classList.remove('active');
+        input.focus();
     }
-
-    // --- LOGIC GỢI Ý & LƯU TỨC THÌ ---
-    function handleInputSearch(val) {
-        const suggestionsDiv = document.getElementById('custom-suggestions');
-        const inputVal = val.trim().toLowerCase();
-        if (!inputVal) { suggestionsDiv.classList.add('hidden'); return; }
-
-        const historyMap = new Map();
-        allTasks.forEach(t => {
-            const textLower = t.text.toLowerCase();
-            if (!historyMap.has(textLower)) historyMap.set(textLower, { text: t.text, priority: t.priority });
-        });
-
-        const filtered = Array.from(historyMap.values())
-            .filter(h => h.text.toLowerCase().startsWith(inputVal)).slice(0, 5);
-
-        if (filtered.length > 0) {
-            const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' };
-            suggestionsDiv.innerHTML = filtered.map(h => `
-                <div class="p-3 hover:bg-gray-50 border-b cursor-pointer flex justify-between items-center" 
-                     onclick="saveTask('${h.text.replace(/'/g, "\\'")}', ${h.priority})">
-                    <span class="text-sm font-medium text-gray-700">${h.text}</span>
-                    <span>${pEmojis[h.priority]}</span>
-                </div>
-            `).join('');
-            suggestionsDiv.classList.remove('hidden');
-        } else {
-            suggestionsDiv.classList.add('hidden');
+}
+        async function handleInlineKey(e) {
+            if (e.key === 'Enter') {
+                const text = e.target.value.trim();
+                if (!text) return;
+                await saveTask(text, tempPriority);
+            } else if (e.key === 'Escape') {
+                document.getElementById('inline-add-container').classList.add('hidden');
+                e.target.value = '';
+            }
         }
-    }
 
-    async function saveWithPriority(p) {
-        const text = document.getElementById('inline-task-input').value.trim();
-        if (text) await saveTask(text, p);
-    }
-
-    async function toggleTask(id, currentStatus, priority, streak, e) {
-        const newStatus = !currentStatus;
-        let newStreak = streak || 0;
-        if (newStatus) {
-            shootPoint(e, calculatePoints(priority, newStreak), priority);
-            newStreak++;
+        function getLocalYYYYMMDD(offset = 0) {
+            const d = new Date();
+            d.setDate(d.getDate() + offset);
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
-        await client.from('tasks').update({ 
-            completed: newStatus, 
-            streak: newStreak,
-            last_completed_at: newStatus ? getLocalYYYYMMDD(0) : null
-        }).eq('id', id);
-        fetchTasks();
-    }
 
-    async function deleteTask(id) {
-        if (confirm('Xóa nhiệm vụ này?')) {
-            await client.from('tasks').delete().eq('id', id);
+        function calculatePoints(priority, streak) {
+            const baseMap = { 1: 4, 2: 3, 3: 2, 4: 1 };
+            return baseMap[priority || 4] * Math.pow(1.001, streak || 0);
+        }
+
+        async function fetchTasks() {
+            const { data, error } = await client.from('tasks').select('*');
+            if (error) return;
+            allTasks = data || [];
+            updateHeader();
+            render();
+        }
+
+        function updateHeader() {
+            const today = getLocalYYYYMMDD(0);
+            const totalScore = allTasks.reduce((sum, t) => {
+                const p = calculatePoints(t.priority, t.streak);
+                if (t.completed) return sum + p;
+                if (t.task_date < today) return sum - p;
+                return sum;
+            }, 0);
+            animateNumber('total-score', totalScore);
+            const rankTitle = document.getElementById('rank-title');
+            if (totalScore > 2100) rankTitle.innerText = "KỶ LUẬT (3 THÁNG)";
+            else if (totalScore > 500) rankTitle.innerText = "BỀN BỈ (1 THÁNG)";
+            else if (totalScore > 0) rankTitle.innerText = "TẬP SỰ";
+            else rankTitle.innerText = "KHỞI ĐẦU";
+        }
+
+        function shootPoint(e, points, priority) {
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+            const el = document.createElement('div');
+            el.className = 'floating-point';
+            el.innerHTML = `+${points.toFixed(2)}`;
+            el.style.color = pColors[priority];
+            
+            const startX = e.clientX; const startY = e.clientY;
+            const midX = window.innerWidth / 2; const midY = window.innerHeight / 2;
+            const target = document.getElementById('total-score');
+            const rect = target.getBoundingClientRect();
+            const endX = rect.left + rect.width / 2; const endY = rect.top + rect.height / 2;
+
+            el.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(0.2)`;
+            el.style.opacity = '1';
+            document.body.appendChild(el);
+
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    el.style.transform = `translate3d(${midX}px, ${midY}px, 0) translate(-50%, -50%) scale(1)`;
+                }, 20);
+            });
+
+            setTimeout(() => {
+                el.style.transition = "transform 0.7s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.5s ease-in";
+                el.style.transform = `translate3d(${endX}px, ${endY}px, 0) translate(-50%, -50%) scale(0.1)`;
+                el.style.opacity = '0';
+            }, 1000);
+
+            setTimeout(() => {
+                el.remove();
+            }, 1700);
+        }
+
+        async function toggleTask(id, status, priority, streak, e) {
+            const isChecking = !status;
+            let currentStreak = streak || 0;
+            if (isChecking) {
+                shootPoint(e, calculatePoints(priority, currentStreak), priority);
+                currentStreak += 1;
+            }
+            await client.from('tasks').update({ 
+                completed: isChecking, 
+                streak: currentStreak,
+                last_completed_at: isChecking ? getLocalYYYYMMDD(0) : null
+            }).eq('id', id);
             fetchTasks();
         }
-    }
 
-    // --- UTILS ---
-    function getLocalYYYYMMDD(offset = 0) {
-        const d = new Date();
-        d.setDate(d.getDate() + offset);
-        return d.toISOString().split('T')[0];
-    }
+        function render() {
+            const activeDiv = document.getElementById('active-tasks');
+            const completedDiv = document.getElementById('completed-tasks');
+            const today = getLocalYYYYMMDD(0);
+            const tomorrow = getLocalYYYYMMDD(1);
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
 
-    function calculatePoints(p, s) {
-        const base = { 1: 4, 2: 3, 3: 2, 4: 1 };
-        return base[p || 4] * Math.pow(1.001, s || 0);
-    }
+            let filteredTasks = allTasks.filter(t => {
+                if (currentTab === 'today') return t.task_date <= today;
+                if (currentTab === 'tomorrow') return t.task_date === tomorrow;
+                return true;
+            });
 
-    function updateHeader() {
-        const today = getLocalYYYYMMDD(0);
-        const score = allTasks.reduce((sum, t) => {
-            const p = calculatePoints(t.priority, t.streak);
-            if (t.completed) return sum + p;
-            if (t.task_date < today) return sum - p;
-            return sum;
-        }, 0);
-        
-        document.getElementById('total-score').innerText = score.toFixed(2);
-        const rank = document.getElementById('rank-title');
-        if (score > 2100) rank.innerText = "KỶ LUẬT (3 THÁNG)";
-        else if (score > 500) rank.innerText = "BỀN BỈ (1 THÁNG)";
-        else rank.innerText = score > 0 ? "TẬP SỰ" : "KHỞI ĐẦU";
-    }
+            filteredTasks.sort((a, b) => a.priority - b.priority);
 
-    function shootPoint(e, points, priority) {
-        const colors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
-        const el = document.createElement('div');
-        el.className = 'floating-point';
-        el.innerHTML = `+${points.toFixed(2)}`;
-        el.style.color = colors[priority];
-        el.style.left = e.clientX + 'px';
-        el.style.top = e.clientY + 'px';
-        document.body.appendChild(el);
-
-        requestAnimationFrame(() => {
-            el.style.opacity = '1';
-            el.style.transform = `translateY(-100px) scale(1.2)`;
-        });
-        setTimeout(() => el.remove(), 1000);
-    }
-
-    function render() {
-        const activeDiv = document.getElementById('active-tasks');
-        const completedDiv = document.getElementById('completed-tasks');
-        const today = getLocalYYYYMMDD(0);
-        const tomorrow = getLocalYYYYMMDD(1);
-        const colors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
-
-        const filtered = allTasks.filter(t => {
-            if (currentTab === 'today') return t.task_date <= today;
-            return t.task_date === tomorrow;
-        }).sort((a, b) => a.priority - b.priority);
-
-        const taskHTML = t => `
-            <div class="bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm">
-                <div class="flex items-center gap-4">
-                    <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} 
-                        onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
-                        style="color: ${colors[t.priority]}; border-color: ${colors[t.priority]};">
-                    <div class="flex flex-col">
-                        <span class="${t.completed ? 'line-through text-gray-300' : 'text-gray-700'} font-semibold">${t.text}</span>
-                        ${t.task_date < today && !t.completed ? '<span class="text-[9px] text-red-500 font-bold">TRỄ</span>' : ''}
+            const taskItemHTML = t => {
+                const isDelayed = t.last_completed_at === 'was_delayed' && !t.completed;
+                const color = pColors[t.priority] || '#9ca3af';
+                
+                return `
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm mb-3">
+                    <div class="flex items-center gap-4 flex-1">
+                        <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} 
+                            onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
+                            style="color: ${color}; border-color: ${color};">
+                        <div class="flex flex-col">
+                            <span class="task-name ${t.completed ? 'text-gray-300' : 'text-gray-700'} font-semibold">${t.text}</span>
+                            ${isDelayed ? 
+                                `<span class="text-[9px] font-extrabold text-red-500 uppercase tracking-wider mt-0.5">Hôm qua</span>` 
+                                : ''}
+                        </div>
                     </div>
-                </div>
-                <button onclick="deleteTask(${t.id})" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
-            </div>`;
+                    <div class="flex items-center gap-3">
+                        <button onclick="deleteTask(${t.id})" class="text-red-500 hover:text-red-700 p-1 px-2 text-xl transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>`;
+            };
 
-        activeDiv.innerHTML = filtered.filter(t => !t.completed).map(taskHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
-        completedDiv.innerHTML = filtered.filter(t => t.completed).map(taskHTML).join('');
-        document.getElementById('completed-count').innerText = filtered.filter(t => t.completed).length;
+            activeDiv.innerHTML = filteredTasks.filter(t => !t.completed).map(taskItemHTML).join('') || '<p class="text-center text-gray-400 text-xs py-10">Hết việc rồi!</p>';
+            completedDiv.innerHTML = filteredTasks.filter(t => t.completed).map(taskItemHTML).join('');
+            document.getElementById('completed-count').innerText = filteredTasks.filter(t => t.completed).length;
 
-        if (currentTab === 'achievements') {
-            const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
-                acc[t.text] = (acc[t.text] || 0) + 1; return acc;
-            }, {});
-            document.getElementById('achievement-list').innerHTML = Object.entries(summary).map(([name, count]) => `
-                <div class="bg-white p-4 rounded-xl flex justify-between border-l-4 border-indigo-500 shadow-sm">
-                    <span class="font-bold text-sm">${name}</span>
-                    <span class="text-indigo-600 font-black">${count}x</span>
-                </div>`).join('');
+            if (currentTab === 'achievements') {
+                const summary = allTasks.filter(t => t.completed).reduce((acc, t) => {
+                    acc[t.text] = acc[t.text] || { total: 0, maxStreak: 0 };
+                    acc[t.text].total++;
+                    acc[t.text].maxStreak = Math.max(acc[t.text].maxStreak, t.streak);
+                    return acc;
+                }, {});
+                document.getElementById('achievement-list').innerHTML = Object.entries(summary).sort((a,b) => b[1].total - a[1].total).map(([name, data]) => `
+                    <div class="bg-white p-4 rounded-xl flex justify-between items-center border-l-4 border-indigo-500 shadow-sm">
+                        <div>
+                            <p class="font-bold text-sm text-gray-800">${name}</p>
+                            <p class="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">Hệ số: x${Math.pow(1.001, data.maxStreak).toFixed(4)}</p>
+                        </div>
+                        <div class="bg-indigo-50 text-indigo-600 font-black px-3 py-1 rounded-lg text-sm">${data.total}x</div>
+                    </div>`).join('');
+            }
         }
-    }
 
-    window.onload = fetchTasks;
-</script>
+        async function deleteTask(id) { if (confirm('Xóa?')) { await client.from('tasks').delete().eq('id', id); fetchTasks(); } }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-' + tab).classList.add('active');
+            document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
+            document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
+            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'TIẾP THEO';
+            render();
+        }
+
+        function animateNumber(id, val) {
+            const el = document.getElementById(id); const start = parseFloat(el.innerText) || 0;
+            const duration = 1000; let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                el.innerText = (progress * (val - start) + start).toFixed(2);
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        async function runDailySync() {
+            const todayStr = getLocalYYYYMMDD(0);
+            const todayDate = new Date(todayStr);
+            const updates = [];
+
+            allTasks.forEach(t => {
+                if (!t.completed && t.task_date < todayStr) {
+                    const taskDate = new Date(t.task_date);
+                    const diffDays = Math.floor((todayDate - taskDate) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays > 0) {
+                        const newStreak = Math.max(0, (t.streak || 0) - diffDays);
+                        updates.push(
+                            client.from('tasks')
+                                .update({ 
+                                    task_date: todayStr, 
+                                    streak: newStreak,
+                                    last_completed_at: 'was_delayed'
+                                })
+                                .eq('id', t.id)
+                        );
+                    }
+                }
+            });
+
+            if (updates.length) {
+                await Promise.all(updates);
+                await fetchTasks();
+            }
+        }
+
+        window.onload = async () => { 
+            await fetchTasks(); 
+            await runDailySync(); 
+        };
+    </script>
 </body>
 </html>
