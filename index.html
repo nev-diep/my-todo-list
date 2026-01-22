@@ -194,7 +194,7 @@
                 <button type="button" onclick="saveWithPriority(1, '#ef4444')">🔴</button>
                 <button type="button" onclick="saveWithPriority(2, '#fb923c')">🟡</button>
                 <button type="button" onclick="saveWithPriority(3, '#60a5fa')">🔵</button>
-                <button type="button" onclick="saveWithPriority(4, '#9ca3af')">⚪</button>
+                <button type="button" onclick="saveWithPriority(4, '#78b159')">🟢</button>
             </div>
         </div>
     </div>
@@ -288,7 +288,7 @@ function togglePriorityMenu() {
 async function handleInputSearch(val) {
     const suggestionsDiv = document.getElementById('custom-suggestions');
     const inputVal = val.trim().toLowerCase();
-    const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '⚪' };
+    const pEmojis = { 1: '🔴', 2: '🟡', 3: '🔵', 4: '🟢' };
 
     if (!inputVal) {
         suggestionsDiv.innerHTML = '';
@@ -324,7 +324,7 @@ async function handleInputSearch(val) {
 
 function updateScoreWithColor(newScore, priority) {
             const scoreElement = document.getElementById('total-score');
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#78b159' };
             const originalColor = '#1d1d1f';
             
             // 1. Nổi to và đổi màu theo Priority ngay lập tức
