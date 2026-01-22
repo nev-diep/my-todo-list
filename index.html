@@ -194,7 +194,7 @@
                 <button type="button" onclick="saveWithPriority(1, '#ef4444')">🔴</button>
                 <button type="button" onclick="saveWithPriority(2, '#fb923c')">🟡</button>
                 <button type="button" onclick="saveWithPriority(3, '#60a5fa')">🔵</button>
-                <button type="button" onclick="saveWithPriority(4, '#128994')">🟢</button>
+                <button type="button" onclick="saveWithPriority(4, '#1ab521')">🟢</button>
             </div>
         </div>
     </div>
@@ -324,7 +324,7 @@ async function handleInputSearch(val) {
 
 function updateScoreWithColor(newScore, priority) {
             const scoreElement = document.getElementById('total-score');
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#128994' };
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#1ab521' };
             const originalColor = '#1d1d1f';
             
             // 1. Nổi to và đổi màu theo Priority ngay lập tức
@@ -443,7 +443,7 @@ async function saveWithPriority(p, color) {
 
         function shootPoint(e, points, priority) {
             const currentTotalScore = parseFloat(document.getElementById('total-score').innerText) + points;
-	    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#128994' };
+	    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#1ab521' };
             const el = document.createElement('div');
             el.className = 'floating-point';
             el.innerHTML = `+${points.toFixed(2)}`;
@@ -502,7 +502,7 @@ async function saveWithPriority(p, color) {
             const completedDiv = document.getElementById('completed-tasks');
             const today = getLocalYYYYMMDD(0);
             const tomorrow = getLocalYYYYMMDD(1);
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#128994' };
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#1ab521' };
 
             let filteredTasks = allTasks.filter(t => {
                 if (currentTab === 'today') return t.task_date <= today;
