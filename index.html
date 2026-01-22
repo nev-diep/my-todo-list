@@ -12,19 +12,33 @@
 <style>
     html {
     scrollbar-gutter: stable;
-}
+    }
+
+.score-pulse {
+    animation: pulse-animation 0.4s ease-out;
+    display: inline-block;
+    }
+
+@keyframes pulse-animation {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.4); } 
+    100% { transform: scale(1); }
+    }
+
     body { 
-        font-family: 'Inter', sans-serif; 
-        background-color: #f9fafb; 
-        color: #1f2937; 
-        -webkit-tap-highlight-color: transparent;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        background-color: #f5f5f7; 
+        color: #1d1d1f; 
+	-webkit-font-smoothing: antialiased;
+	letter-spacing: -0.011em;
         width: 100%;
     }
     
-.score-header {
+    .score-header {
         position: fixed; top: 0; left: 0; width: 100%; 
-        height: 60px; 
+        height: 80px; 
         background: rgba(255, 255, 255, 0.95); 
+	border-bottom: 1px solid #e5e7eb;
         backdrop-filter: blur(10px);
         display: flex; 
         align-items: center; 
@@ -82,8 +96,9 @@
         display: block;
     }
     .floating-point {
-        position: fixed; font-weight: 900; pointer-events: none; z-index: 9999;
-        font-size: 3rem; opacity: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
+        position: fixed; font-family: 'Inter', sans-serif; font-weight: 800; pointer-events: none; z-index: 9999;
+        font-size: 4rem; letter-spacing: -0.05em; opacity: 0; transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out;
+	will-change: transform, opacity;
     }
 
 .add-btn-floating {
@@ -146,8 +161,8 @@
             <i class="fas fa-medal text-indigo-400"></i>
         </div>
         <div class="flex flex-col justify-center">
-            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Discipline Score</p>
-            <h1 id="total-score" class="text-2xl font-extrabold text-gray-800 leading-none">0</h1>
+            <p class="text-[9px] text-gray-800 uppercase tracking-widest leading-none mb-1">Your Power</p>
+            <h1 id="total-score" class="text-[48px] tracking-tight text-[#1d1d1f] leading-none">0</h1>
         </div>
     </div>
     <div class="flex items-center">
@@ -157,7 +172,7 @@
 
     <main>
         <div id="task-view">
-            <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">HÔM NAY</h2>
+            <h2 id="tab-title" class="text-[11px] font-black text-gray-400 uppercase tracking-tight mb-4 ml-1">TODAY</h2>
             
 <div id="inline-add-container" class="mb-3 hidden">
     <div id="inline-card" class="bg-white p-4 rounded-2xl border-2 border-indigo-200 flex items-center gap-4 shadow-md relative">
@@ -189,13 +204,13 @@
             <details class="mt-8 group" id="completed-section">
                 <summary class="flex items-center gap-2 text-gray-400 font-bold text-xs cursor-pointer list-none bg-gray-100/50 p-3 rounded-xl select-none">
                     <i class="fas fa-chevron-right transition-transform group-open:rotate-90 text-[10px]"></i>
-                    <span>ĐÃ XONG (<span id="completed-count">0</span>)</span>
+                    <span>Completed (<span id="completed-count">0</span>)</span>
                 </summary>
                 <div id="completed-tasks" class="mt-4 space-y-2 opacity-60"></div>
             </details>
         </div>
         <div id="achievements-view" class="hidden">
-            <h2 class="text-lg font-extrabold mb-5">Thành Tựu Kỷ Luật</h2>
+            <h2 class="text-lg font-extrabold mb-5">Completed List</h2>
             <div id="achievement-list" class="space-y-3"></div>
         </div>
     </main>
@@ -209,7 +224,7 @@
             <i class="fas fa-calendar-check text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Today</span>
         </button>
         <button onclick="switchTab('tomorrow')" id="btn-tomorrow" class="nav-item flex flex-col items-center">
-            <i class="fas fa-calendar-plus text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Next</span>
+            <i class="fas fa-calendar-plus text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Tomorrow</span>
         </button>
         <button onclick="switchTab('achievements')" id="btn-achievements" class="nav-item flex flex-col items-center">
             <i class="fas fa-award text-lg"></i><span class="text-[9px] font-bold mt-1 uppercase">Ranks</span>
@@ -289,7 +304,6 @@ async function handleInputSearch(val) {
         }
     });
 
-    // Lọc chính xác các task bắt đầu bằng chữ cái đã nhập
     const filtered = Array.from(historyMap.values()).filter(h => 
         h.text.toLowerCase().startsWith(inputVal)
     ).slice(0, 5);
@@ -308,11 +322,40 @@ async function handleInputSearch(val) {
     }
 }
 
+function updateScoreWithColor(newScore, priority) {
+            const scoreElement = document.getElementById('total-score');
+            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+            const originalColor = '#1d1d1f';
+            
+            // 1. Nổi to và đổi màu theo Priority ngay lập tức
+            scoreElement.style.color = pColors[priority];
+            scoreElement.classList.remove('score-pulse');
+            void scoreElement.offsetWidth; 
+            scoreElement.classList.add('score-pulse');
+
+            // 2. Chạy số (Counting animation)
+            const start = parseFloat(scoreElement.innerText) || 0;
+            const duration = 800; // Thời gian chạy số
+            let startTimestamp = null;
+
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                scoreElement.innerText = (progress * (newScore - start) + start).toFixed(2);
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+
+            // 3. Sau khi hiệu ứng pulse và chạy số hoàn tất, trả về màu mặc định
+            setTimeout(() => {
+                scoreElement.style.transition = 'color 0.5s ease';
+                scoreElement.style.color = originalColor;
+            }, 600);
+        }
+
 async function selectAndSave(text, priority) {
-    // Ẩn bảng gợi ý ngay lập tức
     document.getElementById('custom-suggestions').classList.add('hidden');
     
-    // Thực hiện lưu task luôn với text và priority cũ
     await saveTask(text, priority);
     
     // Reset ô input và đóng container sau khi lưu thành công
@@ -375,7 +418,7 @@ async function saveWithPriority(p, color) {
             render();
         }
 
-        function updateHeader() {
+	function updateHeader() {
             const today = getLocalYYYYMMDD(0);
             const totalScore = allTasks.reduce((sum, t) => {
                 const p = calculatePoints(t.priority, t.streak);
@@ -383,43 +426,57 @@ async function saveWithPriority(p, color) {
                 if (t.task_date < today) return sum - p;
                 return sum;
             }, 0);
-            animateNumber('total-score', totalScore);
+            
+            // Chỉ cập nhật Rank, không gọi animateNumber ở đây để tránh chạy số tự động
             const rankTitle = document.getElementById('rank-title');
             if (totalScore > 2100) rankTitle.innerText = "KỶ LUẬT (3 THÁNG)";
             else if (totalScore > 500) rankTitle.innerText = "BỀN BỈ (1 THÁNG)";
             else if (totalScore > 0) rankTitle.innerText = "TẬP SỰ";
             else rankTitle.innerText = "KHỞI ĐẦU";
+            
+            // Nếu là lần đầu load trang (số đang là 0), thì gán thẳng giá trị
+            const scoreEl = document.getElementById('total-score');
+            if (scoreEl.innerText === "0") {
+                scoreEl.innerText = totalScore.toFixed(2);
+            }
         }
 
         function shootPoint(e, points, priority) {
-            const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
+            const currentTotalScore = parseFloat(document.getElementById('total-score').innerText) + points;
+	    const pColors = { 1: '#ef4444', 2: '#fb923c', 3: '#60a5fa', 4: '#9ca3af' };
             const el = document.createElement('div');
             el.className = 'floating-point';
             el.innerHTML = `+${points.toFixed(2)}`;
             el.style.color = pColors[priority];
             
             const startX = e.clientX; const startY = e.clientY;
-            const midX = window.innerWidth / 2; const midY = window.innerHeight / 2;
             const target = document.getElementById('total-score');
             const rect = target.getBoundingClientRect();
             const endX = rect.left + rect.width / 2; const endY = rect.top + rect.height / 2;
-
+	    el.style.left = '0';
+    	    el.style.top = '0';
             el.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(0.2)`;
             el.style.opacity = '1';
             document.body.appendChild(el);
 
             requestAnimationFrame(() => {
                 setTimeout(() => {
-                    el.style.transform = `translate3d(${midX}px, ${midY}px, 0) translate(-50%, -50%) scale(1)`;
+                    el.style.transform = `translate3d(${window.innerWidth/2}px, ${window.innerHeight/2}px, 0) translate(-50%, -50%) scale(1)`;
                 }, 20);
             });
 
-            setTimeout(() => {
+		setTimeout(() => {
                 el.style.transition = "transform 0.7s cubic-bezier(0.7, 0, 0.84, 0), opacity 0.5s ease-in";
                 el.style.transform = `translate3d(${endX}px, ${endY}px, 0) translate(-50%, -50%) scale(0.1)`;
                 el.style.opacity = '0';
-            }, 1000);
+            
+                // Khi điểm bay gần chạm tới (khoảng 600ms trong 700ms của transition bay)
+                setTimeout(() => {
+                    updateScoreWithColor(currentTotalScore, priority); 
+                }, 200); // Tinh chỉnh số này để khớp với mắt nhìn của bạn
 
+            }, 1000);
+ 
             setTimeout(() => {
                 el.remove();
             }, 1700);
@@ -466,7 +523,7 @@ async function saveWithPriority(p, color) {
                             onclick="toggleTask(${t.id}, ${t.completed}, ${t.priority}, ${t.streak}, event)" 
                             style="color: ${color}; border-color: ${color};">
                         <div class="flex flex-col">
-                            <span class="task-name ${t.completed ? 'text-gray-300' : 'text-gray-700'} font-semibold">${t.text}</span>
+                            <span class="task-name ${t.completed ? 'text-gray-300' : 'text-gray-800'} tracking-tight text-[15px]">${t.text}</span>
                             ${isDelayed ? 
                                 `<span class="text-[9px] font-extrabold text-red-500 uppercase tracking-wider mt-0.5">Hôm qua</span>` 
                                 : ''}
@@ -510,7 +567,7 @@ async function saveWithPriority(p, color) {
             document.getElementById('btn-' + tab).classList.add('active');
             document.getElementById('task-view').classList.toggle('hidden', tab === 'achievements');
             document.getElementById('achievements-view').classList.toggle('hidden', tab !== 'achievements');
-            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'HÔM NAY' : 'TIẾP THEO';
+            if (tab !== 'achievements') document.getElementById('tab-title').innerText = tab === 'today' ? 'TODAY' : 'TOMORROW';
             render();
         }
 
